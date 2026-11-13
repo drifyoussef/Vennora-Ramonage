@@ -37,37 +37,76 @@ export interface CurrentUser {
  * accès. On relit donc l'utilisateur, en mémoïsant l'appel avec `cache()` pour
  * qu'un rendu qui traverse dix composants serveur ne fasse qu'une requête.
  *
+ * Utilisateur, organisation et métier sont lus en parallèle, à partir des
+ * identifiants que porte le jeton : sur MongoDB, un `select` imbriqué les
+ * aurait enchaînés en trois allers-retours, payés à chaque page. Le jeton ne
+ * sert qu'à lancer les lectures plus tôt — ce qui fait foi reste la base :
+ * si l'utilisateur a changé d'organisation ou l'organisation de métier, on
+ * relit à partir de la valeur en base.
+ *
  * Retourne `null` plutôt que de rediriger : c'est à l'appelant de décider.
  */
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      orgId: true,
-      role: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      active: true,
-      colorHex: true,
-      passwordChangedAt: true,
-      org: {
-        select: {
-          id: true,
-          name: true,
-          logoKey: true,
-          plan: true,
-          trade: { select: { slug: true, name: true } },
-        },
+  const orgSelect = {
+    id: true,
+    name: true,
+    logoKey: true,
+    plan: true,
+    tradeId: true,
+  } as const;
+  const tradeSelect = { id: true, slug: true, name: true } as const;
+
+  const [user, orgFromToken, tradeFromToken] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        orgId: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        active: true,
+        colorHex: true,
+        passwordChangedAt: true,
       },
-    },
-  });
+    }),
+    session.user.orgId
+      ? prisma.organization.findUnique({
+          where: { id: session.user.orgId },
+          select: orgSelect,
+        })
+      : null,
+    session.user.tradeSlug
+      ? prisma.trade.findUnique({
+          where: { slug: session.user.tradeSlug },
+          select: tradeSelect,
+        })
+      : null,
+  ]);
 
   if (!user || !user.active) return null;
+
+  const org =
+    orgFromToken?.id === user.orgId
+      ? orgFromToken
+      : await prisma.organization.findUnique({
+          where: { id: user.orgId },
+          select: orgSelect,
+        });
+  if (!org) return null;
+
+  const trade =
+    tradeFromToken?.id === org.tradeId
+      ? tradeFromToken
+      : await prisma.trade.findUnique({
+          where: { id: org.tradeId },
+          select: tradeSelect,
+        });
+  if (!trade) return null;
 
   // Un jeton émis avant le dernier changement de mot de passe est périmé,
   // même s'il n'a pas encore expiré. Sans ce contrôle, changer son mot de
@@ -91,12 +130,12 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     email: user.email,
     colorHex: user.colorHex,
     org: {
-      id: user.org.id,
-      name: user.org.name,
-      logoKey: user.org.logoKey,
-      tradeSlug: user.org.trade.slug,
-      tradeName: user.org.trade.name,
-      plan: user.org.plan,
+      id: org.id,
+      name: org.name,
+      logoKey: org.logoKey,
+      tradeSlug: trade.slug,
+      tradeName: trade.name,
+      plan: org.plan,
     },
   };
 });

@@ -4,7 +4,7 @@ import { InterventionStatus, UserRole } from "@/core/enums";
 import { NotFoundError } from "../errors";
 import { escapeSearch } from "../schemas";
 import type { AppContext } from "../context";
-import { interventionCardSelect } from "./dashboard";
+import { findInterventionCards } from "./dashboard";
 
 const PAGE_SIZE = 30;
 
@@ -71,12 +71,11 @@ export async function listInterventions(
   const where = buildWhere(filters, user);
 
   const [items, total] = await Promise.all([
-    db.intervention.findMany({
+    findInterventionCards(db, {
       where,
       orderBy: { scheduledStart: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      select: interventionCardSelect,
     }),
     db.intervention.count({ where }),
   ]);
@@ -96,10 +95,9 @@ export async function listPlanning(
   to: Date,
   technicianId?: string,
 ) {
-  return db.intervention.findMany({
+  return findInterventionCards(db, {
     where: buildWhere({ from, to, technicianId }, user),
     orderBy: { scheduledStart: "asc" },
-    select: interventionCardSelect,
   });
 }
 
