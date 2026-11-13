@@ -2,6 +2,10 @@
   "name": "vennora",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -16,7 +20,9 @@
     "test:watch": "vitest",
     "org:create": "tsx scripts/creer-organisation.ts",
     "user:password": "tsx scripts/reinitialiser-mot-de-passe.ts",
-    "org:plan": "tsx scripts/definir-offre.ts"
+    "org:plan": "tsx scripts/definir-offre.ts",
+    "dev:refonte": "node scripts/dev-refonte.mjs",
+    "typecheck:refonte": "npm run typecheck -w @vennora/core -w @vennora/api -w @vennora/web"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

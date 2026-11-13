@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr" class="h-full antialiased">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover : sans lui, env(safe-area-inset-*) vaut 0 sur
+         iPhone en application plein écran. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Gérez vos interventions. Maîtrisez vos équipements." />
+    <meta name="application-name" content="Vennora Ramonage" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0F3D4C" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08161B" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Vennora Ramonage" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" type="image/svg+xml" href="/icons/vennora.svg" />
+    <link rel="apple-touch-icon" href="/icons/vennora.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Vennora Ramonage</title>
+  </head>
+  <body class="flex min-h-full flex-col">
+    <div id="root" class="flex min-h-full flex-1 flex-col"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

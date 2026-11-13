@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Nouvelle pile (Fastify + React) : chaque espace de travail a sa config.
+    "apps/**",
+    "packages/**",
     // Client Prisma : code généré, jamais édité à la main.
     "src/generated/**",
   ]),
