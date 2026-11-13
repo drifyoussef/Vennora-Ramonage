@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import cookie from "@fastify/cookie";
+import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import { env, isProduction } from "./env";
 import { registerHttpConventions } from "./http";
@@ -7,8 +8,11 @@ import { mongo } from "./mongo";
 import { authRoutes } from "./routes/auth";
 import { clientRoutes } from "./routes/clients";
 import { documentRoutes } from "./routes/documents";
+import { equipeRoutes } from "./routes/equipe";
+import { businessFileRoutes } from "./routes/fichiers-metier";
 import { fileRoutes } from "./routes/files";
 import { interventionRoutes } from "./routes/interventions";
+import { interventionWriteRoutes } from "./routes/interventions-ecriture";
 import { referentielRoutes } from "./routes/referentiel";
 import { suiviRoutes } from "./routes/suivi";
 
@@ -30,6 +34,8 @@ export async function buildServer() {
 
   await app.register(cookie);
   await app.register(rateLimit, { global: false });
+  // Les limites de taille sont fixées à la lecture (voir multipart.ts).
+  await app.register(multipart);
   registerHttpConventions(app);
 
   app.get("/api/sante", async () => ({ ok: true }));
@@ -37,8 +43,11 @@ export async function buildServer() {
   await app.register(clientRoutes);
   await app.register(referentielRoutes);
   await app.register(interventionRoutes);
+  await app.register(interventionWriteRoutes);
   await app.register(suiviRoutes);
   await app.register(documentRoutes);
+  await app.register(equipeRoutes);
+  await app.register(businessFileRoutes);
   await app.register(fileRoutes);
 
   app.addHook("onClose", async () => {

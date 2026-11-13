@@ -17,6 +17,19 @@ s = s.replace(/from "@\/core\/(enums|labels|plans|permissions|schemas|errors|pal
 s = s.replace(/from "@\/lib\/(format|csv|bytes)"/g, 'from "@vennora/core/$1"');
 s = s.replace(/from "@\/verticals\/([a-z/]+)"/g, 'from "@vennora/core/verticals/$1"');
 
+// Navigation après écriture : `router.push` + `router.refresh` deviennent
+// « relire les données, puis naviguer ».
+if (/useRouter\(\)/.test(s)) {
+  s = s.replace(/import \{ useRouter \} from "next\/navigation";/, 'import { useNavigate } from "react-router";\nimport { act, formJson, useRefresh } from "@/lib/actions";\nimport { api } from "@/lib/api";');
+  // Tous les composants du fichier, pas seulement le premier.
+  s = s.replace(/const router = useRouter\(\);/g, "const navigate = useNavigate();\n  const refresh = useRefresh();");
+  s = s.replace(/router\.push\(([^;]+)\);\s*\n(\s*)router\.refresh\(\);/g, "await refresh();\n$2navigate($1);");
+  s = s.replace(/router\.refresh\(\);/g, "await refresh();");
+  s = s.replace(/router\.push\(([^;]+)\);/g, "navigate($1);");
+  s = s.replace(/router\.replace\(([^;]+)\);/g, "navigate($1, { replace: true });");
+  s = s.replace(/router\.back\(\);/g, "navigate(-1);");
+}
+
 mkdirSync(dirname(target), { recursive: true });
 writeFileSync(target, s);
 const restants = [...s.matchAll(/from "(next[^"]*|@\/core\/[^"]+|server-only)"/g)].map((m) => m[1]);

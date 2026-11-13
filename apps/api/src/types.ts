@@ -64,3 +64,38 @@ export interface RemindersView {
   pending: number;
   overdue: number;
 }
+
+/** GET /api/parametres */
+export interface SettingsView {
+  organization: {
+    id: string;
+    name: string;
+    address: string | null;
+    postalCode: string | null;
+    city: string | null;
+    phone: string | null;
+    email: string | null;
+    siret: string | null;
+    createdAt: Date;
+    trade: { id: string; name: string; colorHex: string };
+  };
+  users: Omit<TeamMember, "createdAt">[];
+  equipmentTypes: EquipmentTypeEntry[];
+  interventionTypes: InterventionTypeEntry[];
+}
+
+/** GET /api/equipe/:id */
+export interface TeamMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  role: import("@vennora/core/enums").UserRole;
+  active: boolean;
+  colorHex: string | null;
+  lastLoginAt: Date | null;
+  createdAt: Date;
+}
+
+export type { AnalyseImport, ResultatImport } from "./data/import-clients";

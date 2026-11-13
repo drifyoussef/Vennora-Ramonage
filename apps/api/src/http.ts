@@ -21,7 +21,7 @@ export function parse<T extends z.ZodType>(schema: T, input: unknown): z.infer<T
   const result = schema.safeParse(input);
   if (!result.success) {
     throw new ValidationError(
-      "Certains champs sont invalides.",
+      "Vérifiez les champs en rouge.",
       z.flattenError(result.error).fieldErrors as Record<string, string[]>,
     );
   }
@@ -29,6 +29,20 @@ export function parse<T extends z.ZodType>(schema: T, input: unknown): z.infer<T
 }
 
 export function registerHttpConventions(app: FastifyInstance): void {
+  // Un corps JSON vide (DELETE, ou POST sans contenu envoyé avec l'en-tête
+  // `application/json`) vaut « pas de corps », pas une erreur 400.
+  app.removeContentTypeParser("application/json");
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (_request, body, done) => {
+    if (body === "") return done(null, undefined);
+    try {
+      done(null, JSON.parse(body as string));
+    } catch {
+      const error = new Error("Corps JSON illisible.") as Error & { statusCode: number };
+      error.statusCode = 400;
+      done(error, undefined);
+    }
+  });
+
   /**
    * Garde CSRF. Le cookie de session est `SameSite=Lax`, ce qui bloque déjà
    * l'essentiel ; on exige en plus un en-tête maison sur toute écriture. Un

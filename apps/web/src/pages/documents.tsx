@@ -12,7 +12,7 @@ import { DOCUMENT_CATEGORY_LABEL, plural } from "@vennora/core/labels";
 import { can } from "@vennora/core/permissions";
 import { formatDate } from "@vennora/core/format";
 import { formatSize } from "@vennora/core/bytes";
-import { DeleteDocument, DocumentUpload } from "@/components/provisoire/document-upload";
+import { DeleteDocument, DocumentUpload } from "./documents/document-upload";
 
 export function DocumentsPage() {
   useDocumentTitle("Documents");

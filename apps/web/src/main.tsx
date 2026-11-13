@@ -14,6 +14,19 @@ import { ApiError } from "@/lib/api";
 import { NotPortedYet } from "@/pages/a-porter";
 import { AnomaliesPage } from "@/pages/anomalies";
 import { CustomerPage } from "@/pages/client/client";
+import { EditCustomerPage } from "@/pages/client/client-modifier";
+import { NewCustomerPage } from "@/pages/client/client-nouveau";
+import { ImportCustomersPage } from "@/pages/client/client-import";
+import { EditMemberPage } from "@/pages/parametres/membre-modifier";
+import { NewMemberPage } from "@/pages/parametres/membre-nouveau";
+import { SettingsPage } from "@/pages/parametres/parametres";
+import { ProfilePage } from "@/pages/profil/profil";
+import { EditEquipmentPage } from "@/pages/equipement/equipement-modifier";
+import { NewEquipmentPage } from "@/pages/equipement/equipement-nouveau";
+import { EditInterventionPage } from "@/pages/intervention/intervention-modifier";
+import { NewInterventionPage } from "@/pages/intervention/intervention-nouvelle";
+import { EditSitePage } from "@/pages/site/site-modifier";
+import { NewSitePage } from "@/pages/site/site-nouveau";
 import { CustomersPage } from "@/pages/clients";
 import { DocumentsPage } from "@/pages/documents";
 import { EquipmentPage } from "@/pages/equipement/equipement";
@@ -57,11 +70,19 @@ const router = createBrowserRouter([
       { path: "/rappels", element: <RemindersPage /> },
       { path: "/anomalies", element: <AnomaliesPage /> },
       { path: "/documents", element: <DocumentsPage /> },
-      // Écrans de saisie, étape 3 : déclarés explicitement pour ne pas être
-      // pris pour une fiche dont l'identifiant serait « nouveau ».
-      ...["/clients/nouveau", "/clients/import", "/sites/nouveau", "/equipements/nouveau", "/interventions/nouvelle"].map(
-        (path) => ({ path, element: <NotPortedYet /> }),
-      ),
+      { path: "/clients/nouveau", element: <NewCustomerPage /> },
+      { path: "/clients/:id/modifier", element: <EditCustomerPage /> },
+      { path: "/sites/nouveau", element: <NewSitePage /> },
+      { path: "/sites/:id/modifier", element: <EditSitePage /> },
+      { path: "/equipements/nouveau", element: <NewEquipmentPage /> },
+      { path: "/equipements/:id/modifier", element: <EditEquipmentPage /> },
+      { path: "/interventions/nouvelle", element: <NewInterventionPage /> },
+      { path: "/interventions/:id/modifier", element: <EditInterventionPage /> },
+      { path: "/clients/import", element: <ImportCustomersPage /> },
+      { path: "/parametres", element: <SettingsPage /> },
+      { path: "/parametres/equipe/nouveau", element: <NewMemberPage /> },
+      { path: "/parametres/equipe/:id/modifier", element: <EditMemberPage /> },
+      { path: "/profil", element: <ProfilePage /> },
       { path: "*", element: <NotPortedYet /> },
     ],
   },
