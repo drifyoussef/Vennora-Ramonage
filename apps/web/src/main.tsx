@@ -12,7 +12,18 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppLayout } from "@/layouts/app-layout";
 import { ApiError } from "@/lib/api";
 import { NotPortedYet } from "@/pages/a-porter";
+import { AnomaliesPage } from "@/pages/anomalies";
+import { CustomerPage } from "@/pages/client/client";
 import { CustomersPage } from "@/pages/clients";
+import { DocumentsPage } from "@/pages/documents";
+import { EquipmentPage } from "@/pages/equipement/equipement";
+import { EquipmentsPage } from "@/pages/equipements";
+import { InterventionsPage } from "@/pages/interventions";
+import { PlanningPage } from "@/pages/planning/planning";
+import { RemindersPage } from "@/pages/rappels/rappels";
+import { SitePage } from "@/pages/site/site";
+import { SitesPage } from "@/pages/sites";
+import { DashboardPage } from "@/pages/tableau-de-bord";
 import { LoginPage } from "@/pages/connexion";
 
 const queryClient = new QueryClient({
@@ -34,7 +45,23 @@ const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
+      { path: "/", element: <DashboardPage /> },
+      { path: "/interventions", element: <InterventionsPage /> },
+      { path: "/planning", element: <PlanningPage /> },
       { path: "/clients", element: <CustomersPage /> },
+      { path: "/clients/:id", element: <CustomerPage /> },
+      { path: "/sites", element: <SitesPage /> },
+      { path: "/sites/:id", element: <SitePage /> },
+      { path: "/equipements", element: <EquipmentsPage /> },
+      { path: "/equipements/:id", element: <EquipmentPage /> },
+      { path: "/rappels", element: <RemindersPage /> },
+      { path: "/anomalies", element: <AnomaliesPage /> },
+      { path: "/documents", element: <DocumentsPage /> },
+      // Écrans de saisie, étape 3 : déclarés explicitement pour ne pas être
+      // pris pour une fiche dont l'identifiant serait « nouveau ».
+      ...["/clients/nouveau", "/clients/import", "/sites/nouveau", "/equipements/nouveau", "/interventions/nouvelle"].map(
+        (path) => ({ path, element: <NotPortedYet /> }),
+      ),
       { path: "*", element: <NotPortedYet /> },
     ],
   },

@@ -1,8 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import { listQuerySchema, objectId } from "@vennora/core/schemas";
-import { z } from "zod";
+import { listQuerySchema } from "@vennora/core/schemas";
 import { requireContext } from "../context";
-import { getCustomer, listCustomers, listCustomerOptions } from "../data/customers";
+import { listCustomers, listCustomerOptions } from "../data/customers";
 import { parse } from "../http";
 
 export async function clientRoutes(app: FastifyInstance): Promise<void> {
@@ -17,9 +16,4 @@ export async function clientRoutes(app: FastifyInstance): Promise<void> {
     return listCustomerOptions(context);
   });
 
-  app.get("/api/clients/:id", async (request) => {
-    const context = await requireContext(request, "customer.view");
-    const { id } = parse(z.object({ id: objectId }), request.params);
-    return getCustomer(context, id);
-  });
 }

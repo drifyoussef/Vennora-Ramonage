@@ -6,6 +6,11 @@ import { registerHttpConventions } from "./http";
 import { mongo } from "./mongo";
 import { authRoutes } from "./routes/auth";
 import { clientRoutes } from "./routes/clients";
+import { documentRoutes } from "./routes/documents";
+import { fileRoutes } from "./routes/files";
+import { interventionRoutes } from "./routes/interventions";
+import { referentielRoutes } from "./routes/referentiel";
+import { suiviRoutes } from "./routes/suivi";
 
 /**
  * Serveur de l'API.
@@ -30,6 +35,11 @@ export async function buildServer() {
   app.get("/api/sante", async () => ({ ok: true }));
   await app.register(authRoutes);
   await app.register(clientRoutes);
+  await app.register(referentielRoutes);
+  await app.register(interventionRoutes);
+  await app.register(suiviRoutes);
+  await app.register(documentRoutes);
+  await app.register(fileRoutes);
 
   app.addHook("onClose", async () => {
     await mongo.close();
