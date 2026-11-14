@@ -11,7 +11,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { AppLayout } from "@/layouts/app-layout";
 import { ApiError } from "@/lib/api";
-import { NotPortedYet } from "@/pages/a-porter";
 import { AnomaliesPage } from "@/pages/anomalies";
 import { CustomerPage } from "@/pages/client/client";
 import { EditCustomerPage } from "@/pages/client/client-modifier";
@@ -23,7 +22,11 @@ import { SettingsPage } from "@/pages/parametres/parametres";
 import { ProfilePage } from "@/pages/profil/profil";
 import { EditEquipmentPage } from "@/pages/equipement/equipement-modifier";
 import { NewEquipmentPage } from "@/pages/equipement/equipement-nouveau";
+import { InterventionPage } from "@/pages/intervention/intervention";
 import { EditInterventionPage } from "@/pages/intervention/intervention-modifier";
+import { QrResolvePage } from "@/pages/scanner/qr-resolution";
+import { ScannerPage } from "@/pages/scanner/scanner";
+import { NotFoundPage } from "@/pages/introuvable";
 import { NewInterventionPage } from "@/pages/intervention/intervention-nouvelle";
 import { EditSitePage } from "@/pages/site/site-modifier";
 import { NewSitePage } from "@/pages/site/site-nouveau";
@@ -77,13 +80,16 @@ const router = createBrowserRouter([
       { path: "/equipements/nouveau", element: <NewEquipmentPage /> },
       { path: "/equipements/:id/modifier", element: <EditEquipmentPage /> },
       { path: "/interventions/nouvelle", element: <NewInterventionPage /> },
+      { path: "/interventions/:id", element: <InterventionPage /> },
+      { path: "/scanner", element: <ScannerPage /> },
+      { path: "/e/:token", element: <QrResolvePage /> },
       { path: "/interventions/:id/modifier", element: <EditInterventionPage /> },
       { path: "/clients/import", element: <ImportCustomersPage /> },
       { path: "/parametres", element: <SettingsPage /> },
       { path: "/parametres/equipe/nouveau", element: <NewMemberPage /> },
       { path: "/parametres/equipe/:id/modifier", element: <EditMemberPage /> },
       { path: "/profil", element: <ProfilePage /> },
-      { path: "*", element: <NotPortedYet /> },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

@@ -175,11 +175,36 @@ export async function getIntervention({ db }: AppContext, id: string) {
             "validatedAt",
             "pdfKey",
             "sentAt",
+            "sentTo",
+            "regenerations",
           ],
         }),
         signature: backOne("Signature", "interventionId", {
           fields: ["signerName", "signedAt"],
         }),
+        // Pièces du dossier, avec leur clé : la route les remplace par des
+        // liens signés avant de répondre.
+        photos: many(
+          "InterventionPhoto",
+          "interventionId",
+          { fields: ["storageKey", "caption", "sizeBytes", "createdAt"] },
+          { sort: { createdAt: 1 } },
+        ),
+        voiceNotes: many(
+          "VoiceNote",
+          "interventionId",
+          {
+            fields: [
+              "storageKey",
+              "durationSec",
+              "transcript",
+              "transcriptStatus",
+              "transcriptEdited",
+              "createdAt",
+            ],
+          },
+          { sort: { createdAt: 1 } },
+        ),
       },
       count: {
         photos: count("InterventionPhoto", "interventionId"),

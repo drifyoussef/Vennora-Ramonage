@@ -1,4 +1,5 @@
 import type { FastifyRequest } from "fastify";
+import type {} from "@fastify/multipart";
 import { ValidationError } from "@vennora/core/errors";
 
 /**

@@ -15,6 +15,9 @@ import { interventionRoutes } from "./routes/interventions";
 import { interventionWriteRoutes } from "./routes/interventions-ecriture";
 import { referentielRoutes } from "./routes/referentiel";
 import { suiviRoutes } from "./routes/suivi";
+import { anomalyRoutes } from "./routes/terrain-anomalies";
+import { mediaRoutes } from "./routes/terrain-medias";
+import { reportRoutes } from "./routes/terrain-rapport";
 
 /**
  * Serveur de l'API.
@@ -48,6 +51,9 @@ export async function buildServer() {
   await app.register(documentRoutes);
   await app.register(equipeRoutes);
   await app.register(businessFileRoutes);
+  await app.register(anomalyRoutes);
+  await app.register(mediaRoutes);
+  await app.register(reportRoutes);
   await app.register(fileRoutes);
 
   app.addHook("onClose", async () => {

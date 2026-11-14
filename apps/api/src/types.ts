@@ -13,6 +13,7 @@ import type { listInterventions, listTechnicians } from "./data/interventions";
 import type { listSites } from "./data/sites";
 import type { EquipmentTypeEntry, InterventionTypeEntry } from "./data/catalog";
 import type { ReminderItem } from "./data/reminders";
+import type { InterventionDetail } from "./data/interventions";
 
 export type { CurrentUser } from "./auth/session";
 export type { CustomerListItem, CustomerOption } from "./data/customers";
@@ -99,3 +100,18 @@ export interface TeamMember {
 }
 
 export type { AnalyseImport, ResultatImport } from "./data/import-clients";
+
+/** GET /api/interventions/:id — le dossier d'intervention, pièces comprises. */
+export type InterventionDossier = Omit<InterventionDetail, "photos" | "voiceNotes" | "report"> & {
+  photos: (Omit<InterventionDetail["photos"][number], "storageKey"> & { url: string })[];
+  voiceNotes: (Omit<InterventionDetail["voiceNotes"][number], "storageKey"> & { url: string })[];
+  report:
+    | (Omit<NonNullable<InterventionDetail["report"]>, "pdfKey"> & { pdfUrl: string | null })
+    | null;
+  ai: { redaction: boolean; transcription: boolean };
+};
+
+/** Anomalie telle que l'écran d'intervention l'affiche. */
+export type AnomalyDto = InterventionDetail["anomalies"][number];
+export type { PhotoDto, VoiceNoteDto } from "./routes/terrain-medias";
+export type { ReportSectionValues, SectionKey } from "./routes/terrain-rapport";

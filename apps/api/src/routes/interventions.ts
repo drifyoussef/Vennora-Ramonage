@@ -6,6 +6,9 @@ import { listQuerySchema, objectId } from "@vennora/core/schemas";
 import { requireContext } from "../context";
 import { getEquipmentTypes, getInterventionTypes } from "../data/catalog";
 import { getDashboard } from "../data/dashboard";
+import { withUrl } from "../data/documents";
+import { aiIsLive, transcriptionIsLive } from "../services/ai";
+import { fileUrl } from "../services/storage";
 import {
   getIntervention,
   listInterventions,
@@ -68,7 +71,23 @@ export async function interventionRoutes(app: FastifyInstance): Promise<void> {
     ) {
       throw new NotFoundError("Intervention");
     }
-    return intervention;
+    // Photos et notes vocales : la clé de stockage reste sur le serveur, le
+    // navigateur reçoit un lien signé qui expire.
+    const { report } = intervention;
+    const [photos, voiceNotes, pdfUrl] = await Promise.all([
+      Promise.all(intervention.photos.map(withUrl)),
+      Promise.all(intervention.voiceNotes.map(withUrl)),
+      report?.pdfKey ? fileUrl(report.pdfKey) : null,
+    ]);
+    return {
+      ...intervention,
+      photos,
+      voiceNotes,
+      report: report && { ...report, pdfKey: undefined, pdfUrl },
+      // Services d'IA réellement branchés, ou simulés (pilote « mock ») :
+      // l'écran le dit, pour qu'on ne prenne pas un texte factice pour un vrai.
+      ai: { redaction: aiIsLive, transcription: transcriptionIsLive },
+    };
   });
 
   app.get("/api/planning", async (request) => {
