@@ -2,44 +2,16 @@ import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";
 import "./styles.css";
 
-import { StrictMode } from "react";
+import { StrictMode, type ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { AppLayout } from "@/layouts/app-layout";
 import { ApiError } from "@/lib/api";
-import { AnomaliesPage } from "@/pages/anomalies";
-import { CustomerPage } from "@/pages/client/client";
-import { EditCustomerPage } from "@/pages/client/client-modifier";
-import { NewCustomerPage } from "@/pages/client/client-nouveau";
-import { ImportCustomersPage } from "@/pages/client/client-import";
-import { EditMemberPage } from "@/pages/parametres/membre-modifier";
-import { NewMemberPage } from "@/pages/parametres/membre-nouveau";
-import { SettingsPage } from "@/pages/parametres/parametres";
-import { ProfilePage } from "@/pages/profil/profil";
-import { EditEquipmentPage } from "@/pages/equipement/equipement-modifier";
-import { NewEquipmentPage } from "@/pages/equipement/equipement-nouveau";
-import { InterventionPage } from "@/pages/intervention/intervention";
-import { EditInterventionPage } from "@/pages/intervention/intervention-modifier";
-import { QrResolvePage } from "@/pages/scanner/qr-resolution";
-import { ScannerPage } from "@/pages/scanner/scanner";
-import { NotFoundPage } from "@/pages/introuvable";
-import { NewInterventionPage } from "@/pages/intervention/intervention-nouvelle";
-import { EditSitePage } from "@/pages/site/site-modifier";
-import { NewSitePage } from "@/pages/site/site-nouveau";
-import { CustomersPage } from "@/pages/clients";
-import { DocumentsPage } from "@/pages/documents";
-import { EquipmentPage } from "@/pages/equipement/equipement";
-import { EquipmentsPage } from "@/pages/equipements";
-import { InterventionsPage } from "@/pages/interventions";
-import { PlanningPage } from "@/pages/planning/planning";
-import { RemindersPage } from "@/pages/rappels/rappels";
-import { SitePage } from "@/pages/site/site";
-import { SitesPage } from "@/pages/sites";
-import { DashboardPage } from "@/pages/tableau-de-bord";
 import { LoginPage } from "@/pages/connexion";
 
 const queryClient = new QueryClient({
@@ -56,40 +28,60 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Chargement à la demande : chaque écran est un fichier séparé, téléchargé
+ * la première fois qu'on l'ouvre. La coquille et la connexion restent dans le
+ * fichier principal pour s'afficher sans attente ; un technicien qui ne va
+ * jamais dans les paramètres ne télécharge jamais leur code.
+ */
+function page<M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M) {
+  return async () => ({ Component: (await load())[name] as ComponentType });
+}
+
+/** Le temps de télécharger l'écran demandé au premier affichage. */
+function ScreenLoading() {
+  return (
+    <div className="grid min-h-[50dvh] place-items-center" aria-busy="true">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" aria-label="Chargement" />
+    </div>
+  );
+}
+
 const router = createBrowserRouter([
   { path: "/connexion", element: <LoginPage /> },
   {
     element: <AppLayout />,
+    HydrateFallback: ScreenLoading,
     children: [
-      { path: "/", element: <DashboardPage /> },
-      { path: "/interventions", element: <InterventionsPage /> },
-      { path: "/planning", element: <PlanningPage /> },
-      { path: "/clients", element: <CustomersPage /> },
-      { path: "/clients/:id", element: <CustomerPage /> },
-      { path: "/sites", element: <SitesPage /> },
-      { path: "/sites/:id", element: <SitePage /> },
-      { path: "/equipements", element: <EquipmentsPage /> },
-      { path: "/equipements/:id", element: <EquipmentPage /> },
-      { path: "/rappels", element: <RemindersPage /> },
-      { path: "/anomalies", element: <AnomaliesPage /> },
-      { path: "/documents", element: <DocumentsPage /> },
-      { path: "/clients/nouveau", element: <NewCustomerPage /> },
-      { path: "/clients/:id/modifier", element: <EditCustomerPage /> },
-      { path: "/sites/nouveau", element: <NewSitePage /> },
-      { path: "/sites/:id/modifier", element: <EditSitePage /> },
-      { path: "/equipements/nouveau", element: <NewEquipmentPage /> },
-      { path: "/equipements/:id/modifier", element: <EditEquipmentPage /> },
-      { path: "/interventions/nouvelle", element: <NewInterventionPage /> },
-      { path: "/interventions/:id", element: <InterventionPage /> },
-      { path: "/scanner", element: <ScannerPage /> },
-      { path: "/e/:token", element: <QrResolvePage /> },
-      { path: "/interventions/:id/modifier", element: <EditInterventionPage /> },
-      { path: "/clients/import", element: <ImportCustomersPage /> },
-      { path: "/parametres", element: <SettingsPage /> },
-      { path: "/parametres/equipe/nouveau", element: <NewMemberPage /> },
-      { path: "/parametres/equipe/:id/modifier", element: <EditMemberPage /> },
-      { path: "/profil", element: <ProfilePage /> },
-      { path: "*", element: <NotFoundPage /> },
+      { path: "/", lazy: page(() => import("@/pages/tableau-de-bord"), "DashboardPage") },
+      { path: "/interventions", lazy: page(() => import("@/pages/interventions"), "InterventionsPage") },
+      { path: "/interventions/nouvelle", lazy: page(() => import("@/pages/intervention/intervention-nouvelle"), "NewInterventionPage") },
+      { path: "/interventions/:id", lazy: page(() => import("@/pages/intervention/intervention"), "InterventionPage") },
+      { path: "/interventions/:id/modifier", lazy: page(() => import("@/pages/intervention/intervention-modifier"), "EditInterventionPage") },
+      { path: "/planning", lazy: page(() => import("@/pages/planning/planning"), "PlanningPage") },
+      { path: "/clients", lazy: page(() => import("@/pages/clients"), "CustomersPage") },
+      { path: "/clients/nouveau", lazy: page(() => import("@/pages/client/client-nouveau"), "NewCustomerPage") },
+      { path: "/clients/import", lazy: page(() => import("@/pages/client/client-import"), "ImportCustomersPage") },
+      { path: "/clients/:id", lazy: page(() => import("@/pages/client/client"), "CustomerPage") },
+      { path: "/clients/:id/modifier", lazy: page(() => import("@/pages/client/client-modifier"), "EditCustomerPage") },
+      { path: "/sites", lazy: page(() => import("@/pages/sites"), "SitesPage") },
+      { path: "/sites/nouveau", lazy: page(() => import("@/pages/site/site-nouveau"), "NewSitePage") },
+      { path: "/sites/:id", lazy: page(() => import("@/pages/site/site"), "SitePage") },
+      { path: "/sites/:id/modifier", lazy: page(() => import("@/pages/site/site-modifier"), "EditSitePage") },
+      { path: "/equipements", lazy: page(() => import("@/pages/equipements"), "EquipmentsPage") },
+      { path: "/equipements/nouveau", lazy: page(() => import("@/pages/equipement/equipement-nouveau"), "NewEquipmentPage") },
+      { path: "/equipements/:id", lazy: page(() => import("@/pages/equipement/equipement"), "EquipmentPage") },
+      { path: "/equipements/:id/modifier", lazy: page(() => import("@/pages/equipement/equipement-modifier"), "EditEquipmentPage") },
+      { path: "/rappels", lazy: page(() => import("@/pages/rappels/rappels"), "RemindersPage") },
+      { path: "/anomalies", lazy: page(() => import("@/pages/anomalies"), "AnomaliesPage") },
+      { path: "/documents", lazy: page(() => import("@/pages/documents"), "DocumentsPage") },
+      { path: "/scanner", lazy: page(() => import("@/pages/scanner/scanner"), "ScannerPage") },
+      { path: "/e/:token", lazy: page(() => import("@/pages/scanner/qr-resolution"), "QrResolvePage") },
+      { path: "/parametres", lazy: page(() => import("@/pages/parametres/parametres"), "SettingsPage") },
+      { path: "/parametres/equipe/nouveau", lazy: page(() => import("@/pages/parametres/membre-nouveau"), "NewMemberPage") },
+      { path: "/parametres/equipe/:id/modifier", lazy: page(() => import("@/pages/parametres/membre-modifier"), "EditMemberPage") },
+      { path: "/profil", lazy: page(() => import("@/pages/profil/profil"), "ProfilePage") },
+      { path: "*", lazy: page(() => import("@/pages/introuvable"), "NotFoundPage") },
     ],
   },
 ]);
