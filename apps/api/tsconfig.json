@@ -12,6 +12,9 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src"
+    "src",
+    "scripts",
+    "tests",
+    "vitest.config.ts"
   ]
 }
