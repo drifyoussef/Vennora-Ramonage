@@ -24,11 +24,11 @@ export default defineConfig([
     },
   },
   {
-    files: ["apps/api/**/*.ts", "scripts/**/*.mjs"],
+    files: ["back/**/*.ts", "scripts/**/*.mjs"],
     languageOptions: { globals: globals.node },
   },
   {
-    files: ["apps/web/**/*.{ts,tsx}"],
+    files: ["front/**/*.{ts,tsx}"],
     languageOptions: { globals: globals.browser },
     plugins: { "react-hooks": reactHooks },
     rules: {

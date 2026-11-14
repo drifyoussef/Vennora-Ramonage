@@ -2,24 +2,25 @@
   "name": "vennora",
   "version": "0.1.0",
   "private": true,
-  "description": "Vennora Ramonage — gestion des interventions techniques. API Fastify (apps/api), interface React (apps/web), métier partagé (packages/core).",
+  "description": "Vennora Ramonage — gestion des interventions techniques. Back : Node.js + Fastify (back/). Front : React + TSX (front/). Code commun : shared/.",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "back",
+    "front",
+    "shared"
   ],
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "npm run build -w @vennora/web",
-    "start": "npm run start -w @vennora/api",
-    "typecheck": "npm run typecheck -w @vennora/core -w @vennora/api -w @vennora/web",
+    "build": "npm run build -w @vennora/front",
+    "start": "npm run start -w @vennora/back",
+    "typecheck": "npm run typecheck -w @vennora/shared -w @vennora/back -w @vennora/front",
     "lint": "eslint .",
-    "test": "npm run test -w @vennora/api",
-    "test:watch": "npm run test:watch -w @vennora/api",
-    "db:seed": "npm run db:seed -w @vennora/api",
-    "db:indexes": "npm run db:indexes -w @vennora/api",
-    "org:create": "npm run org:create -w @vennora/api --",
-    "org:plan": "npm run org:plan -w @vennora/api --",
-    "user:password": "npm run user:password -w @vennora/api --"
+    "test": "npm run test -w @vennora/back",
+    "test:watch": "npm run test:watch -w @vennora/back",
+    "db:seed": "npm run db:seed -w @vennora/back",
+    "db:indexes": "npm run db:indexes -w @vennora/back",
+    "org:create": "npm run org:create -w @vennora/back --",
+    "org:plan": "npm run org:plan -w @vennora/back --",
+    "user:password": "npm run user:password -w @vennora/back --"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

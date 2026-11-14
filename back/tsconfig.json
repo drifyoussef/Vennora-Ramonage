@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src",
+    "scripts",
+    "tests",
+    "vitest.config.ts"
+  ]
+}

@@ -1,10 +1,10 @@
-// Lance l'API (Fastify, port 4000) et l'interface (Vite, port 5173) ensemble,
+// Lance le back (Fastify, port 4000) et le front (Vite, port 5173) ensemble,
 // sorties préfixées. Ctrl+C arrête les deux.
 import { spawn } from "node:child_process";
 
 const apps = [
-  { name: "api", color: "\x1b[36m", workspace: "@vennora/api" },
-  { name: "web", color: "\x1b[35m", workspace: "@vennora/web" },
+  { name: "back", color: "\x1b[36m", workspace: "@vennora/back" },
+  { name: "front", color: "\x1b[35m", workspace: "@vennora/front" },
 ];
 
 const children = apps.map(({ name, color, workspace }) => {

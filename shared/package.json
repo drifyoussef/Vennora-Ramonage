@@ -1,0 +1,16 @@
+{
+  "name": "@vennora/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Métier partagé entre l'API et l'interface : énumérations, libellés, droits, offres, schémas de validation, verticaux. Aucune dépendance au serveur ni au navigateur.",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

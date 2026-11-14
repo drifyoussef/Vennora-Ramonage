@@ -2,7 +2,8 @@
 node_modules/
 
 # Sorties de build.
-apps/*/dist/
+back/dist/
+front/dist/
 *.tsbuildinfo
 
 # Tests.

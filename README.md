@@ -37,7 +37,7 @@ Vite (même Wi-Fi).
 
 Le reste — stockage, IA, e-mail — a des valeurs par défaut simulées : voir
 `.env.example`. La configuration est validée au démarrage par
-`apps/api/src/env.ts` : une clé manquante fait échouer le démarrage plutôt que
+`back/src/env.ts` : une clé manquante fait échouer le démarrage plutôt que
 de produire une erreur obscure à la première requête.
 
 **Atlas refuse la connexion (« tlsv1 alert internal error ») ?** L'adresse IP
@@ -58,7 +58,7 @@ Current IP Address. Fréquent en partage de connexion, où l'IP change.
 | Commande                | Effet                                                         |
 | ----------------------- | ------------------------------------------------------------- |
 | `npm run dev`           | API (rechargée à chaque modification) et interface ensemble    |
-| `npm run build`         | construit l'interface dans `apps/web/dist`                     |
+| `npm run build`         | construit l'interface dans `front/dist`                     |
 | `npm start`             | API en production, qui sert aussi l'interface construite       |
 | `npm run typecheck`     | vérifie les types des trois espaces de travail                 |
 | `npm run lint`          | ESLint, règles des hooks React comprises                       |
@@ -88,7 +88,7 @@ Le mot de passe est tiré au sort et affiché **une seule fois** — sauf si
 La commande synchronise les catalogues métier au passage : l'entreprise créée
 trouve ses types d'équipement dès la première intervention.
 
-La règle métier vit dans `apps/api/src/data/onboarding.ts`. Le jour où une inscription
+La règle métier vit dans `back/src/data/onboarding.ts`. Le jour où une inscription
 en libre-service existera, elle appellera la même fonction — pas une copie.
 
 **Reprise du fichier clients.** Un nouveau client arrive avec un tableur :
@@ -113,7 +113,7 @@ signés, et un fichier de lecture. Rien n'est stocké au passage.
 
 ## Offres
 
-`Organization.plan` porte l'offre souscrite, et `packages/core/src/plans.ts` dit ce que
+`Organization.plan` porte l'offre souscrite, et `shared/src/plans.ts` dit ce que
 chacune donne. C'est la seule matrice : l'interface la lit pour flouter, le
 serveur la lit pour refuser.
 
@@ -151,11 +151,11 @@ npm run org:plan -- --slug ramonage-cevennes --offre PRO
 
 ## Architecture
 
-Un monorepo npm, trois espaces de travail, TypeScript partout :
+Un seul dépôt, trois dossiers, TypeScript partout :
 
 ```
-apps/
-├── api/                 Node.js + Fastify
+Vennora-Ramonage/
+├── back/                Node.js + Fastify
 │   ├── src/
 │   │   ├── db/          accès MongoDB : collections, lectures avec relations,
 │   │   │                cloisonnement, index
@@ -165,20 +165,22 @@ apps/
 │   │   ├── services/    stockage, PDF, IA, e-mail, QR codes
 │   │   ├── context.ts   point d'entrée unique de tout accès aux données
 │   │   ├── tenant.ts    isolation multi-tenant
-│   │   └── types.ts     types des réponses, importés par l'interface
+│   │   └── types.ts     types des réponses, importés par le front
 │   ├── scripts/         seed, index, administration
 │   └── tests/           vitest, contre la vraie base
-└── web/                 React (TSX) + Vite + React Router + TanStack Query
-    └── src/
-        ├── pages/       un écran par fichier (ou par dossier)
-        ├── components/  ui/ (shadcn), shell/ (navigation), vennora/ (métier)
-        └── lib/         appels d'API, session, cache, utilitaires
-packages/
-└── core/                métier partagé : énumérations, libellés, droits,
-                         offres, schémas Zod, verticaux, formats
+├── front/               React (TSX) + Vite + React Router + TanStack Query
+│   └── src/
+│       ├── pages/       un écran par fichier (ou par dossier)
+│       ├── components/  ui/ (shadcn), shell/ (navigation), vennora/ (métier)
+│       └── lib/         appels d'API, session, cache, utilitaires
+└── shared/              code commun au back et au front : énumérations,
+                         libellés, droits, offres, schémas Zod, verticaux
 ```
 
-L'interface importe les **types** des réponses depuis `@vennora/api/types`
+Le back se lance seul avec `npm run dev -w @vennora/back`, le front avec
+`npm run dev -w @vennora/front` ; `npm run dev` lance les deux.
+
+L'interface importe les **types** des réponses depuis `@vennora/back/types`
 (types seulement, aucun code serveur n'atteint le navigateur) : une route qui
 change sa réponse casse la compilation de l'écran qui la lit.
 
@@ -186,9 +188,9 @@ change sa réponse casse la compilation de l'écran qui la lit.
 
 Le cœur est agnostique. Un nouveau vertical se résume à :
 
-1. écrire `packages/core/src/verticals/<metier>/index.ts` (types
+1. écrire `shared/src/verticals/<metier>/index.ts` (types
    d'équipement, types d'intervention, sections du rapport, vocabulaire) ;
-2. l'enregistrer dans `packages/core/src/verticals/registry.ts` avec
+2. l'enregistrer dans `shared/src/verticals/registry.ts` avec
    `active: true` ;
 3. relancer `npm run db:seed` — ou appeler `syncTradeCatalogs()` — pour
    projeter les catalogues en base.
@@ -226,7 +228,7 @@ Deux garde-fous complètent le dispositif :
 ## Choix techniques notables
 
 **MongoDB, avec le driver officiel.** Pas d'ORM : une couche fine
-(`apps/api/src/db`) décrit les collections, convertit les identifiants
+(`back/src/db`) décrit les collections, convertit les identifiants
 (`_id`/`ObjectId` en base, `id` en texte dans l'application), applique
 valeurs par défaut et horodatages, et charge les relations par `$lookup` —
 **une requête par écran**, quelle que soit la profondeur, avec un résultat

@@ -4,12 +4,12 @@ SaaS B2B de gestion des interventions techniques. Vertical actif : ramonage.
 Interface entièrement en français, y compris les routes
 (`/clients`, `/equipements`, `/interventions/nouvelle`, `/api/rappels`).
 
-Monorepo npm, TypeScript partout :
+Un dépôt, trois dossiers à la racine, TypeScript partout :
 
-- `apps/api` — Node.js + **Fastify**, MongoDB Atlas par le **driver officiel**
+- `back` — Node.js + **Fastify**, MongoDB Atlas par le **driver officiel**
   `mongodb` (pas de Prisma, pas d'ORM) ;
-- `apps/web` — **React (TSX)** + Vite + React Router + TanStack Query ;
-- `packages/core` — métier partagé : énumérations, libellés, droits, offres,
+- `front` — **React (TSX)** + Vite + React Router + TanStack Query ;
+- `shared` — métier partagé : énumérations, libellés, droits, offres,
   schémas Zod, verticaux, formats. Aucune dépendance serveur ni navigateur.
 
 Lire `README.md` pour l'architecture et les choix techniques. Les points
@@ -39,7 +39,7 @@ typé d'après la spec. Ne pas enchaîner des lectures relation par relation.
 
 Filtres et données s'écrivent en forme applicative : `id` (pas `_id`),
 identifiants en chaînes. La conversion vers `ObjectId` est faite par
-`apps/api/src/db/convert.ts`, jamais à la main.
+`back/src/db/convert.ts`, jamais à la main.
 
 Une relation filtrée (« les anomalies des interventions de ce client ») se
 résout en deux temps : `distinct("id", …)` sur la collection liée, puis
@@ -48,9 +48,9 @@ résout en deux temps : `distinct("id", …)` sur la collection liée, puis
 ## Collections et index
 
 La forme des documents, les champs `ObjectId`, les valeurs par défaut et les
-horodatages sont déclarés dans `apps/api/src/db/models.ts` — c'est l'ancien
+horodatages sont déclarés dans `back/src/db/models.ts` — c'est l'ancien
 `schema.prisma`. Ajouter un champ : le déclarer là. Ajouter un index :
-`INDEXES` dans `apps/api/src/db/index.ts`, puis `npm run db:indexes`.
+`INDEXES` dans `back/src/db/index.ts`, puis `npm run db:indexes`.
 
 Ajouter un champ **requis** demande de **compléter les documents déjà en
 base** : la valeur par défaut ne s'applique qu'à la création.
@@ -61,9 +61,9 @@ refusées dès qu'elles emporteraient un historique à valeur probante.
 
 ## Énumérations
 
-Source de vérité : `packages/core/src/enums.ts`. Importer depuis
-`@vennora/core/enums`. Une valeur ajoutée demande ses libellés dans
-`packages/core/src/labels.ts` (le typage l'exige).
+Source de vérité : `shared/src/enums.ts`. Importer depuis
+`@vennora/shared/enums`. Une valeur ajoutée demande ses libellés dans
+`shared/src/labels.ts` (le typage l'exige).
 
 ## Interface et API
 
@@ -71,12 +71,12 @@ Source de vérité : `packages/core/src/enums.ts`. Importer depuis
   route vérifie session, permission, organisation, et pour un technicien que
   l'intervention lui est assignée (`requireVisibleIntervention`,
   `requireEditableIntervention`).
-- Types des réponses : exportés par `apps/api/src/types.ts`, importés côté
-  front avec `import type … from "@vennora/api/types"` — **types seulement**.
+- Types des réponses : exportés par `back/src/types.ts`, importés côté
+  front avec `import type … from "@vennora/back/types"` — **types seulement**.
 - Écritures côté front : `act(() => api.post(…))` (forme `ActionResult`,
   erreurs champ par champ), puis `useRefresh()` pour relire les écrans.
 - Toute écriture porte l'en-tête `x-vennora: 1` (garde CSRF) — le client
-  `api` de `apps/web/src/lib/api.ts` l'ajoute.
+  `api` de `front/src/lib/api.ts` l'ajoute.
 - **Dates :** un instant qui dépend du fuseau de l'utilisateur (aujourd'hui,
   cette semaine, un créneau à 9 h) est calculé par le navigateur et envoyé à
   l'API, jamais déduit côté serveur (souvent en UTC).
@@ -85,7 +85,7 @@ Source de vérité : `packages/core/src/enums.ts`. Importer depuis
 ## Offres
 
 `Organization.plan` décide des fonctionnalités servies. La matrice est dans
-`packages/core/src/plans.ts` et nulle part ailleurs.
+`shared/src/plans.ts` et nulle part ailleurs.
 
 Toute fonctionnalité payante se garde **des deux côtés** :
 
@@ -99,9 +99,9 @@ données réelles en comptant sur le flou : c'est du CSS, ça se retire.
 
 ## Fichiers
 
-Tout passe par `apps/api/src/services/storage` : `storeFile`, `fileUrl`,
+Tout passe par `back/src/services/storage` : `storeFile`, `fileUrl`,
 `deleteFile`. Les fichiers locaux vont dans `.storage/` à la racine du dépôt
-— jamais dans `apps/web/public/`, servi sans contrôle, or il s'agit de photos
+— jamais dans `front/public/`, servi sans contrôle, or il s'agit de photos
 de chantier et de signatures clients.
 
 `storeFile` détermine le type par la **signature binaire**, pas par le
@@ -121,13 +121,13 @@ droits par une lecture cloisonnée avant d'appeler `fileUrl`.
 ## Verticaux
 
 Le vocabulaire, les types d'équipement, les types d'intervention et les
-sections du rapport appartiennent à `packages/core/src/verticals/<metier>/`.
-Ne rien coder en dur dans `apps/` qui soit propre au ramonage.
+sections du rapport appartiennent à `shared/src/verticals/<metier>/`.
+Ne rien coder en dur dans `back/` ni `front/` qui soit propre au ramonage.
 
 ## Interface
 
 - Champs de saisie en `h-11` (44 px) : le technicien saisit au doigt.
-- Libellés d'énumération dans `packages/core/src/labels.ts`, jamais en dur
+- Libellés d'énumération dans `shared/src/labels.ts`, jamais en dur
   dans un composant.
 - Couleurs par jeton (`bg-severity-high`, `text-status-done`, `text-brand`),
   jamais de hex en dur, sauf pour les couleurs venant de la base (type
