@@ -1,7 +1,6 @@
 import { useDocumentTitle } from "@/lib/title";
 import { RequirePermission } from "@/components/vennora/require-permission";
 import { HeaderSkeleton } from "@/components/vennora/skeletons";
-import { useUser } from "@/lib/user";
 import { pageState, useApiQuery } from "@/lib/query";
 
 import { PageHeader } from "@/components/vennora/page";

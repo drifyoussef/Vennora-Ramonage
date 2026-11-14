@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import type {} from "@fastify/static";
 import { z } from "zod";
 import { AppError, ForbiddenError, ValidationError } from "@vennora/core/errors";
 
@@ -28,7 +29,10 @@ export function parse<T extends z.ZodType>(schema: T, input: unknown): z.infer<T
   return result.data;
 }
 
-export function registerHttpConventions(app: FastifyInstance): void {
+export function registerHttpConventions(
+  app: FastifyInstance,
+  options: { spa?: boolean } = {},
+): void {
   // Un corps JSON vide (DELETE, ou POST sans contenu envoyé avec l'en-tête
   // `application/json`) vaut « pas de corps », pas une erreur 400.
   app.removeContentTypeParser("application/json");
@@ -81,7 +85,24 @@ export function registerHttpConventions(app: FastifyInstance): void {
     } satisfies ErrorBody);
   });
 
-  app.setNotFoundHandler((_request, reply) =>
-    reply.status(404).send({ error: "Introuvable.", code: "NOT_FOUND" } satisfies ErrorBody),
-  );
+  /**
+   * En-têtes de sécurité, sur toute réponse (API et interface).
+   * La caméra et le micro restent autorisés sur l'origine : ils servent au
+   * scan de QR code et aux notes vocales.
+   */
+  app.addHook("onSend", async (_request, reply) => {
+    reply.header("X-Content-Type-Options", "nosniff");
+    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(self)");
+  });
+
+  app.setNotFoundHandler((request, reply) => {
+    // Interface servie par l'API (production) : toute adresse hors /api est
+    // une page de l'application, résolue par le routeur côté navigateur.
+    if (options.spa && request.method === "GET" && !request.url.startsWith("/api/")) {
+      return reply.header("Cache-Control", "no-cache").sendFile("index.html");
+    }
+    return reply.status(404).send({ error: "Introuvable.", code: "NOT_FOUND" } satisfies ErrorBody);
+  });
 }

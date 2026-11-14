@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGrid, PageHeader } from "@/components/vennora/page";
 import { useLogout } from "@/lib/session";
 import { USER_ROLE_LABEL } from "@vennora/core/labels";
-import { InterventionStatus, UserRole } from "@vennora/core/enums";
-import { endOfWeek, startOfWeek } from "@vennora/core/format";
+import { UserRole } from "@vennora/core/enums";
 import { PasswordForm } from "./password-form";
 
 export function ProfilePage() {

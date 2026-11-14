@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { useNavigate } from "react-router";
 import { act, formJson, useRefresh } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { Check, Loader2, PenLine, PlayCircle, RotateCcw } from "lucide-react";
@@ -35,7 +34,6 @@ export function SignaturePad({
   existing: { signerName: string; signedAt: Date } | null;
   readOnly: boolean;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);

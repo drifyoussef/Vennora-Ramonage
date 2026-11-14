@@ -1,6 +1,5 @@
 import { useTransition } from "react";
-import { useNavigate } from "react-router";
-import { act, formJson, useRefresh } from "@/lib/actions";
+import { act, useRefresh } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { Link } from "react-router";
 import { Loader2, MoreHorizontal, Pencil, UserCheck, UserX } from "lucide-react";
@@ -26,7 +25,6 @@ export function MemberActions({
   active: boolean;
   isSelf: boolean;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const [pending, startTransition] = useTransition();
 

@@ -1,6 +1,5 @@
 import type { ReportSectionValues, SectionKey } from "@vennora/api/types";
 import { useState, useTransition } from "react";
-import { useNavigate } from "react-router";
 import { act, formJson, useRefresh } from "@/lib/actions";
 import { api } from "@/lib/api";
 import {
@@ -76,7 +75,6 @@ export function ReportPanel({
   envoiAutorise: boolean;
   customerEmail: string | null;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const [values, setValues] = useState<ReportSectionValues>(initial.values);
   const [state, setState] = useState(initial);
@@ -419,7 +417,6 @@ function SendDialog({
   onClose: () => void;
   onSent: (to: string) => void;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});

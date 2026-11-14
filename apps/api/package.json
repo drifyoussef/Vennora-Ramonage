@@ -23,6 +23,7 @@
     "@fastify/cookie": "^11.1.5",
     "@fastify/multipart": "^10.1.8",
     "@fastify/rate-limit": "^11.2.2",
+    "@fastify/static": "^10.1.11",
     "@react-pdf/renderer": "^4.6.1",
     "@vennora/core": "*",
     "bcryptjs": "^3.0.3",
@@ -37,6 +38,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.1",
     "@types/qrcode": "^1.5.6",

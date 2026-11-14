@@ -18,46 +18,56 @@ Client → Site → Équipement → Intervention → Rapport → Historique
 ```bash
 npm install
 cp .env.example .env        # puis renseigner DATABASE_URL et AUTH_SECRET
-npm run db:push             # crée les index MongoDB
+npm run db:indexes          # crée les index MongoDB
 npm run db:seed             # jeu de démonstration « Ramonage Cévennes »
-npm run dev
+npm run dev                 # API sur :4000, interface sur http://localhost:5173
 ```
+
+L'interface relaie `/api` vers l'API : en développement comme en production,
+le navigateur ne voit qu'une seule adresse, et le cookie de session suit sans
+réglage CORS. Pour tester sur téléphone, ouvrir l'adresse réseau affichée par
+Vite (même Wi-Fi).
 
 ### Variables indispensables
 
 | Variable       | Rôle                                                             |
 | -------------- | ---------------------------------------------------------------- |
 | `DATABASE_URL` | URI MongoDB Atlas, **nom de base inclus** (`…mongodb.net/vennora`) |
-| `AUTH_SECRET`  | `openssl rand -base64 32`                                        |
+| `AUTH_SECRET`  | 32 caractères au moins, aléatoires (voir `.env.example`)           |
 
-Les autres (S3, IA, e-mail) ont un mode dégradé et peuvent rester vides :
-voir `.env.example`. La configuration est validée au démarrage par
-`src/lib/env.ts` — une clé manquante fait échouer le boot plutôt que de
-produire une erreur obscure à la première requête.
+Le reste — stockage, IA, e-mail — a des valeurs par défaut simulées : voir
+`.env.example`. La configuration est validée au démarrage par
+`apps/api/src/env.ts` : une clé manquante fait échouer le démarrage plutôt que
+de produire une erreur obscure à la première requête.
+
+**Atlas refuse la connexion (« tlsv1 alert internal error ») ?** L'adresse IP
+de la machine n'est pas autorisée : Atlas → Security → Network Access → Add
+Current IP Address. Fréquent en partage de connexion, où l'IP change.
 
 ### Comptes de démonstration
 
-| Rôle          | E-mail                          | Mot de passe  |
-| ------------- | ------------------------------- | ------------- |
-| Administrateur | `celine@ramonage-cevennes.fr`   | `vennora2026` |
-| Technicien    | `ludovic@ramonage-cevennes.fr`  | `vennora2026` |
+| Rôle           | E-mail                          | Mot de passe  |
+| -------------- | ------------------------------- | ------------- |
+| Administrateur | celine@ramonage-cevennes.fr     | vennora2026   |
+| Technicien     | ludovic@ramonage-cevennes.fr    | vennora2026   |
 
----
+`npm run db:seed` **efface et recrée** l'organisation « Ramonage Cévennes ».
 
 ## Scripts
 
-| Commande            | Effet                                            |
-| ------------------- | ------------------------------------------------ |
-| `npm run dev`       | Serveur de développement                          |
-| `npm run build`     | `prisma generate` puis build de production        |
-| `npm run typecheck` | Vérification TypeScript sans émission             |
-| `npm run lint`      | ESLint                                            |
-| `npm run db:push`   | Applique le schéma Prisma à MongoDB               |
-| `npm run db:seed`   | (Re)crée le jeu de démonstration                  |
-| `npm run org:create`| Crée une entreprise cliente et son administrateur |
-| `npm run user:password`| Réinitialise le mot de passe d'un utilisateur      |
-| `npm run org:plan`  | Affiche ou change l'offre d'une entreprise         |
-| `npm run db:studio` | Prisma Studio                                     |
+| Commande                | Effet                                                         |
+| ----------------------- | ------------------------------------------------------------- |
+| `npm run dev`           | API (rechargée à chaque modification) et interface ensemble    |
+| `npm run build`         | construit l'interface dans `apps/web/dist`                     |
+| `npm start`             | API en production, qui sert aussi l'interface construite       |
+| `npm run typecheck`     | vérifie les types des trois espaces de travail                 |
+| `npm run lint`          | ESLint, règles des hooks React comprises                       |
+| `npm test`              | tests de l'API, contre la vraie base (organisations jetables)  |
+| `npm run db:indexes`    | crée les index manquants (idempotent)                          |
+| `npm run db:seed`       | jeu de démonstration                                           |
+| `npm run org:create`    | crée une entreprise et son administrateur                      |
+| `npm run org:plan`      | consulte ou change l'offre d'une entreprise                    |
+| `npm run user:password` | réinitialise un mot de passe                                   |
 
 ---
 
@@ -78,7 +88,7 @@ Le mot de passe est tiré au sort et affiché **une seule fois** — sauf si
 La commande synchronise les catalogues métier au passage : l'entreprise créée
 trouve ses types d'équipement dès la première intervention.
 
-La règle métier vit dans `src/core/onboarding.ts`. Le jour où une inscription
+La règle métier vit dans `apps/api/src/data/onboarding.ts`. Le jour où une inscription
 en libre-service existera, elle appellera la même fonction — pas une copie.
 
 **Reprise du fichier clients.** Un nouveau client arrive avec un tableur :
@@ -103,7 +113,7 @@ signés, et un fichier de lecture. Rien n'est stocké au passage.
 
 ## Offres
 
-`Organization.plan` porte l'offre souscrite, et `src/core/plans.ts` dit ce que
+`Organization.plan` porte l'offre souscrite, et `packages/core/src/plans.ts` dit ce que
 chacune donne. C'est la seule matrice : l'interface la lit pour flouter, le
 serveur la lit pour refuser.
 
@@ -121,8 +131,8 @@ absente de l'échelle commerciale du code — l'application ne proposera jamais
 d'y « passer », puisqu'elle ne se souscrit plus.
 
 **Le floutage n'est pas la protection.** Une zone verrouillée n'est pas rendue
-avec ses données — le composant réel n'atteint jamais le navigateur — et
-l'action correspondante appelle `exigerFonctionnalite`, qui refuse. Retirer un
+avec ses données — le composant réel n'est jamais affiché — et la route
+d'API correspondante appelle `exigerFonctionnalite`, qui refuse. Retirer un
 filtre CSS ne révèle donc rien, et forger la requête ne fait rien.
 
 Le nombre d'utilisateurs compris est déclaré dans la matrice mais **n'est pas
@@ -141,94 +151,100 @@ npm run org:plan -- --slug ramonage-cevennes --offre PRO
 
 ## Architecture
 
+Un monorepo npm, trois espaces de travail, TypeScript partout :
+
 ```
-src/
-├── app/
-│   ├── (app)/           écrans authentifiés (dashboard, clients, planning…)
-│   ├── connexion/       authentification
-│   └── api/auth/        Auth.js
-├── core/                cœur métier, indépendant de l'interface
-│   ├── auth/            session, mots de passe, configuration Auth.js
-│   ├── data/            requêtes de lecture, une par agrégat
-│   ├── context.ts       point d'entrée unique de tout accès aux données
-│   ├── tenant.ts        isolation multi-tenant
-│   ├── permissions.ts   matrice de droits
-│   ├── enums.ts         énumérations utilisables côté navigateur
-│   └── schemas.ts       validation Zod, partagée client/serveur
-├── verticals/           définition des métiers
-│   ├── types.ts         contrat d'un métier
-│   ├── ramonage/        le seul vertical actif
-│   └── registry.ts      registre des métiers
-├── components/
-│   ├── ui/              shadcn/ui
-│   ├── shell/           navigation, barre latérale, barre mobile
-│   └── vennora/         composants métier partagés
-├── services/            intégrations (QR codes, puis stockage, PDF, IA)
-└── lib/                 env validé, client Prisma, formatage
+apps/
+├── api/                 Node.js + Fastify
+│   ├── src/
+│   │   ├── db/          accès MongoDB : collections, lectures avec relations,
+│   │   │                cloisonnement, index
+│   │   ├── auth/        session (cookie httpOnly signé), mots de passe
+│   │   ├── data/        lectures et règles métier, une par agrégat
+│   │   ├── routes/      routes HTTP, une famille par fichier
+│   │   ├── services/    stockage, PDF, IA, e-mail, QR codes
+│   │   ├── context.ts   point d'entrée unique de tout accès aux données
+│   │   ├── tenant.ts    isolation multi-tenant
+│   │   └── types.ts     types des réponses, importés par l'interface
+│   ├── scripts/         seed, index, administration
+│   └── tests/           vitest, contre la vraie base
+└── web/                 React (TSX) + Vite + React Router + TanStack Query
+    └── src/
+        ├── pages/       un écran par fichier (ou par dossier)
+        ├── components/  ui/ (shadcn), shell/ (navigation), vennora/ (métier)
+        └── lib/         appels d'API, session, cache, utilitaires
+packages/
+└── core/                métier partagé : énumérations, libellés, droits,
+                         offres, schémas Zod, verticaux, formats
 ```
+
+L'interface importe les **types** des réponses depuis `@vennora/api/types`
+(types seulement, aucun code serveur n'atteint le navigateur) : une route qui
+change sa réponse casse la compilation de l'écran qui la lit.
 
 ### Ajouter un métier
 
 Le cœur est agnostique. Un nouveau vertical se résume à :
 
-1. écrire `src/verticals/<metier>/index.ts` (types d'équipement, types
-   d'intervention, sections du rapport, vocabulaire) ;
-2. l'enregistrer dans `src/verticals/registry.ts` avec `active: true` ;
+1. écrire `packages/core/src/verticals/<metier>/index.ts` (types
+   d'équipement, types d'intervention, sections du rapport, vocabulaire) ;
+2. l'enregistrer dans `packages/core/src/verticals/registry.ts` avec
+   `active: true` ;
 3. relancer `npm run db:seed` — ou appeler `syncTradeCatalogs()` — pour
    projeter les catalogues en base.
-
-Aucune modification de `src/core` ni de `src/app`.
 
 ---
 
 ## Isolation multi-tenant
 
 Toutes les données sont cloisonnées par `Organization`. Le risque n'est pas
-d'écrire un mauvais filtre, c'est d'en **oublier** un : un `findMany` sans
+d'écrire un mauvais filtre, c'est d'en **oublier** un : un `find` sans
 `orgId` compile et passe les tests sur un jeu mono-entreprise.
 
-La possibilité de l'oublier a donc été supprimée. Une page ou une action
-commence par :
+La possibilité de l'oublier a donc été supprimée. Une route commence par :
 
 ```ts
-const { db, user, ctx } = await getPageContext("customer.view");
+const { db, user, ctx } = await requireContext(request, "customer.view");
 ```
 
-Le `db` retourné est un client Prisma étendu qui injecte `orgId` dans le
-`where` de chaque lecture et de chaque écriture. Le client brut (`lib/prisma`)
-n'est utilisé que par l'authentification, le seed et `core/tenant.ts`.
+Le `db` retourné injecte `orgId` dans le filtre de chaque lecture et de
+chaque écriture, dans chaque document créé, et dans chaque `$lookup` des
+lectures avec relations. Le client racine (`rootDb`) n'est utilisé que par
+l'authentification, le seed, les scripts et `tenant.ts`.
 
 Deux garde-fous complètent le dispositif :
 
-- `getPageContext` / `getActionContext` **relisent l'utilisateur en base** à
-  chaque requête (mémoïsé par requête). Un compte désactivé perd l'accès
-  immédiatement, sans attendre l'expiration du jeton ;
-- `src/proxy.ts` ne fait qu'une redirection optimiste. Le contrôle d'accès
-  réel est dans les layouts et les Server Actions ; contourner le proxy ne
-  donne accès à rien.
+- **l'utilisateur est relu en base à chaque requête** : un compte désactivé ou
+  un mot de passe changé coupe l'accès immédiatement, sans attendre
+  l'expiration du jeton ;
+- **l'interface ne protège rien** : masquer un bouton n'est qu'un confort.
+  Chaque route vérifie elle-même session, droit, organisation — et, pour un
+  technicien, que l'intervention lui est bien assignée.
 
 ---
 
 ## Choix techniques notables
 
-**MongoDB plutôt que PostgreSQL.** Conséquence assumée : aucune contrainte
-d'intégrité ni cascade au niveau base. Les suppressions en cascade sont
-écrites explicitement dans les actions, et une suppression est refusée dès
-qu'elle emporterait un historique à valeur probante (interventions terminées,
-rapports signés).
+**MongoDB, avec le driver officiel.** Pas d'ORM : une couche fine
+(`apps/api/src/db`) décrit les collections, convertit les identifiants
+(`_id`/`ObjectId` en base, `id` en texte dans l'application), applique
+valeurs par défaut et horodatages, et charge les relations par `$lookup` —
+**une requête par écran**, quelle que soit la profondeur, avec un résultat
+typé d'après ce qu'on a demandé. Conséquence assumée de MongoDB : aucune
+contrainte d'intégrité ni cascade au niveau base. Les suppressions en cascade
+sont écrites dans les routes, et refusées dès qu'elles emporteraient un
+historique à valeur probante.
 
-**Prisma figé en 6.19.3.** Prisma 7 a supprimé le moteur de requêtes au profit
-d'adaptateurs, et il n'existe pas d'adaptateur MongoDB : la v7 ne supporte pas
-MongoDB. Ne pas mettre à jour sans vérifier ce point.
+**Dates calculées par le navigateur.** « Aujourd'hui », « cette semaine », un
+créneau à 9 h : ces instants dépendent du fuseau de l'utilisateur, pas de
+celui du serveur (souvent UTC). L'interface les calcule et les envoie à l'API.
 
-**Énumérations dupliquées dans `core/enums.ts`.** Importer une constante
-depuis le client Prisma généré entraîne tout son runtime dans le bundle
-navigateur. Les valeurs sont redéclarées et confrontées au type Prisma :
-ajouter une valeur au schéma sans la reporter casse la compilation.
+**Recherche par expression régulière échappée.** Toute saisie utilisateur
+passe par `escapeSearch()` avant de devenir un `$regex`.
 
-**Recherche par expression régulière échappée.** Prisma traduit `contains` en
-`$regex` sur MongoDB ; toute saisie utilisateur passe par `escapeSearch()`
-avant d'atteindre la base.
+**Fichiers.** Type déterminé par la signature binaire, jamais par le nom ni
+le `Content-Type` annoncé ; liens signés qui expirent ; la clé de stockage ne
+quitte jamais le serveur.
 
 **Jeton de QR code opaque et régénérable.** L'étiquette collée sur un appareil
 ne porte jamais un identifiant de base. Elle est révocable sans toucher aux
@@ -236,20 +252,7 @@ données.
 
 ---
 
-## État d'avancement
-
-| Lot                                                   | État     |
-| ----------------------------------------------------- | -------- |
-| **P0** projet, base, authentification, multi-tenant, design system | ✅ fait |
-| **P1** clients, sites, équipements, interventions, planning        | ✅ fait |
-| **P2** interface terrain, QR codes, photos, anomalies, notes       | ✅ fait |
-| **P3** signature, PDF, envoi par e-mail                            | ✅ fait |
-| **P4** enregistrement vocal, transcription, compte-rendu assisté   | ✅ fait (fournisseurs simulés) |
-| **P5** finitions, tests, permissions fines                         | partiel |
-
-Le parcours du §29 est bouclé : client → site → équipement → intervention →
-photos → dictée → compte-rendu → validation → signature → PDF → envoi →
-historique.
+## Fournisseurs externes
 
 Trois briques tournent en implémentation simulée tant qu'aucune clé n'est
 fournie : la transcription vocale, la rédaction assistée et l'envoi

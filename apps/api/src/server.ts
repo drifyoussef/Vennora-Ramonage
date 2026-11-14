@@ -1,4 +1,7 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import Fastify from "fastify";
+import fastifyStatic from "@fastify/static";
 import cookie from "@fastify/cookie";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
@@ -23,9 +26,14 @@ import { reportRoutes } from "./routes/terrain-rapport";
  * Serveur de l'API.
  *
  * En développement, l'interface (Vite, port 5173) relaie `/api` vers ce
- * serveur : navigateur et API partagent donc la même origine, et le cookie de
- * session n'a besoin d'aucune exception CORS.
+ * serveur. En production, c'est ce serveur qui sert l'interface construite
+ * (`npm run build` → apps/web/dist). Dans les deux cas, navigateur et API
+ * partagent la même origine : le cookie de session n'a besoin d'aucune
+ * exception CORS.
  */
+
+/** Interface construite par Vite, servie si elle existe. */
+const WEB_DIST = path.resolve(import.meta.dirname, "../../web/dist");
 export async function buildServer() {
   const app = Fastify({
     // En développement, seulement les avertissements et erreurs : une ligne
@@ -33,13 +41,32 @@ export async function buildServer() {
     logger: isProduction ? true : { level: "warn" },
     // Derrière un hébergeur, l'adresse du client arrive dans X-Forwarded-For.
     trustProxy: isProduction,
+    // Corps JSON jusqu'à 3 Mo : une signature arrive en image PNG encodée
+    // (jusqu'à 2 Mo de texte). Les fichiers, eux, passent en multipart, avec
+    // leur propre limite (voir multipart.ts).
+    bodyLimit: 3 * 1024 * 1024,
   });
 
   await app.register(cookie);
   await app.register(rateLimit, { global: false });
   // Les limites de taille sont fixées à la lecture (voir multipart.ts).
   await app.register(multipart);
-  registerHttpConventions(app);
+  const spa = existsSync(path.join(WEB_DIST, "index.html"));
+  registerHttpConventions(app, { spa });
+  if (spa) {
+    await app.register(fastifyStatic, {
+      root: WEB_DIST,
+      index: false,
+      wildcard: false,
+      // Fichiers de assets/ : nom haché par Vite, donc immuables.
+      setHeaders: (reply, file) => {
+        if (file.includes(`${path.sep}assets${path.sep}`)) {
+          reply.header("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    });
+    app.get("/", (_request, reply) => reply.header("Cache-Control", "no-cache").sendFile("index.html"));
+  }
 
   app.get("/api/sante", async () => ({ ok: true }));
   await app.register(authRoutes);

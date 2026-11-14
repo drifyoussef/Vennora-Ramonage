@@ -1,5 +1,4 @@
 import { useState, useTransition } from "react";
-import { useNavigate } from "react-router";
 import { act, formJson, useRefresh } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { KeyRound, Loader2 } from "lucide-react";
@@ -32,7 +31,6 @@ export function ResetPassword({
   userId: string;
   fullName: string;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();

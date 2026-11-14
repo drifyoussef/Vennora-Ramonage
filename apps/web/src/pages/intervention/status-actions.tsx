@@ -1,6 +1,5 @@
 import { useTransition } from "react";
-import { useNavigate } from "react-router";
-import { act, formJson, useRefresh } from "@/lib/actions";
+import { act, useRefresh } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { CheckCircle2, Loader2, Play, RotateCcw, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -22,7 +21,6 @@ export function StatusActions({
   id: string;
   status: InterventionStatus;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const [pending, startTransition] = useTransition();
 

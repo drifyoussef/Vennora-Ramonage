@@ -2,7 +2,6 @@ import type { AnomalyListItem } from "@vennora/api/types";
 import { FiltersSkeleton, HeaderSkeleton } from "@/components/vennora/skeletons";
 import { query as toQuery } from "@/lib/api";
 import { useDocumentTitle } from "@/lib/title";
-import { useUser } from "@/lib/user";
 import { pageState, useApiQuery } from "@/lib/query";
 import { Link, useSearchParams } from "react-router";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
@@ -12,7 +11,7 @@ import { SeverityBadge } from "@/components/vennora/badges";
 import { EmptyState, PageHeader } from "@/components/vennora/page";
 import { ANOMALY_STATUS_LABEL, plural } from "@vennora/core/labels";
 import { objectId } from "@vennora/core/schemas";
-import { AnomalySeverity, AnomalyStatus, UserRole } from "@vennora/core/enums";
+import { AnomalySeverity, AnomalyStatus } from "@vennora/core/enums";
 import { formatDate } from "@vennora/core/format";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +23,6 @@ const STATUSES = [
 
 export function AnomaliesPage() {
   useDocumentTitle("Anomalies");
-  const user = useUser();
   const [searchParams] = useSearchParams();
   const params: Record<string, string> = Object.fromEntries(searchParams);
 

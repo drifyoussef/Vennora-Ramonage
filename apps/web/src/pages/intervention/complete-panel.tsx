@@ -1,5 +1,4 @@
 import { useState, useTransition } from "react";
-import { useNavigate } from "react-router";
 import { act, formJson, useRefresh } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { CheckCircle2, Loader2 } from "lucide-react";
@@ -51,7 +50,6 @@ export function CompletePanel({
   recurrenceMonths: number | null;
   baseDate: Date;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<string | null>(null);

@@ -45,7 +45,7 @@ export function decoderTexte(octets: Uint8Array): string {
   }
   // Marque d'ordre d'octets : invisible, mais elle colle au nom de la
   // première colonne et fait échouer toute correspondance d'en-tête.
-  return texte.replace(/^﻿/, "");
+  return texte.replace(/^\uFEFF/, "");
 }
 
 /** Découpe une ligne en respectant les guillemets et les doublements. */

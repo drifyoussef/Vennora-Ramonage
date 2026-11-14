@@ -1,6 +1,5 @@
 import { useRef, useState, useTransition } from "react";
-import { useNavigate } from "react-router";
-import { act, formJson, useRefresh } from "@/lib/actions";
+import { act, useRefresh } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -44,7 +43,6 @@ export function DocumentUpload({
   customers: Array<{ id: string; name: string }>;
   presetCustomerId?: string;
 }) {
-  const navigate = useNavigate();
   const refresh = useRefresh();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();

@@ -9,7 +9,6 @@ import { RequirePermission } from "@/components/vennora/require-permission";
 import { PageHeader } from "@/components/vennora/page";
 import { USER_ROLE_LABEL } from "@vennora/core/labels";
 import { TEAM_COLORS } from "@vennora/core/palette";
-import { objectId } from "@vennora/core/schemas";
 import { formatDate } from "@vennora/core/format";
 import { UserForm } from "./user-form";
 import { ResetPassword } from "./reset-password";

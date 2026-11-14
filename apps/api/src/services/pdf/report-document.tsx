@@ -292,7 +292,7 @@ export function ReportDocument({ data }: { data: ReportDocumentData }) {
             <View style={styles.photoRow}>
               {data.photos.map((photo, i) => (
                 <View key={i} style={styles.photoCell} wrap={false}>
-                  {/* eslint-disable-next-line jsx-a11y/alt-text -- composant React-PDF, pas une balise img */}
+                  {/* Composant React-PDF, pas une balise img : pas d'attribut alt. */}
                   <Image style={styles.photo} src={photo.dataUrl} />
                   {photo.caption && (
                     <Text style={styles.caption}>{photo.caption}</Text>
@@ -316,7 +316,7 @@ export function ReportDocument({ data }: { data: ReportDocumentData }) {
             <Text style={styles.label}>Signature du client</Text>
             {data.signature?.imageDataUrl ? (
               <>
-                {/* eslint-disable-next-line jsx-a11y/alt-text -- composant React-PDF */}
+                {/* Composant React-PDF : pas d'attribut alt. */}
                 <Image
                   style={styles.signatureImage}
                   src={data.signature.imageDataUrl}
