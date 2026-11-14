@@ -33,8 +33,8 @@ import path from "node:path";
 const mongo = connectMongo(env.DATABASE_URL);
 const db = mongo.root;
 
-/** Racine du dépôt : les fichiers vont dans .storage, quel que soit le dossier de lancement. */
-const REPO_ROOT = path.resolve(import.meta.dirname, "../..");
+/** Dossier back/ : les fichiers vont dans back/.storage, quel que soit le dossier de lancement. */
+const BACK_ROOT = path.resolve(import.meta.dirname, "..");
 
 const ORG_SLUG = "ramonage-cevennes";
 const DEMO_PASSWORD = "vennora2026";
@@ -364,7 +364,7 @@ const EQUIPMENT_STATE = [
 async function wipeDemoOrg(orgId: string) {
   // Les fichiers accompagnent les lignes : les laisser accumulerait un
   // répertoire de plus en plus gros à chaque relance du seed.
-  await rm(path.join(REPO_ROOT, ".storage", "org", orgId), {
+  await rm(path.join(BACK_ROOT, ".storage", "org", orgId), {
     recursive: true,
     force: true,
   });

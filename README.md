@@ -17,7 +17,7 @@ Client → Site → Équipement → Intervention → Rapport → Historique
 
 ```bash
 npm install
-cp .env.example .env        # puis renseigner DATABASE_URL et AUTH_SECRET
+cp back/.env.example back/.env   # puis renseigner DATABASE_URL et AUTH_SECRET
 npm run db:indexes          # crée les index MongoDB
 npm run db:seed             # jeu de démonstration « Ramonage Cévennes »
 npm run dev                 # API sur :4000, interface sur http://localhost:5173
@@ -33,10 +33,10 @@ Vite (même Wi-Fi).
 | Variable       | Rôle                                                             |
 | -------------- | ---------------------------------------------------------------- |
 | `DATABASE_URL` | URI MongoDB Atlas, **nom de base inclus** (`…mongodb.net/vennora`) |
-| `AUTH_SECRET`  | 32 caractères au moins, aléatoires (voir `.env.example`)           |
+| `AUTH_SECRET`  | 32 caractères au moins, aléatoires (voir `back/.env.example`)      |
 
 Le reste — stockage, IA, e-mail — a des valeurs par défaut simulées : voir
-`.env.example`. La configuration est validée au démarrage par
+`back/.env.example`. La configuration est validée au démarrage par
 `back/src/env.ts` : une clé manquante fait échouer le démarrage plutôt que
 de produire une erreur obscure à la première requête.
 
@@ -167,7 +167,9 @@ Vennora-Ramonage/
 │   │   ├── tenant.ts    isolation multi-tenant
 │   │   └── types.ts     types des réponses, importés par le front
 │   ├── scripts/         seed, index, administration
-│   └── tests/           vitest, contre la vraie base
+│   ├── tests/           vitest, contre la vraie base
+│   ├── .env             configuration et secrets (jamais dans git)
+│   └── .storage/        photos, signatures, PDF stockés en local
 ├── front/               React (TSX) + Vite + React Router + TanStack Query
 │   └── src/
 │       ├── pages/       un écran par fichier (ou par dossier)
@@ -259,7 +261,7 @@ données.
 Trois briques tournent en implémentation simulée tant qu'aucune clé n'est
 fournie : la transcription vocale, la rédaction assistée et l'envoi
 d'e-mails. Chacune est derrière une interface — voir `AI_PROVIDER`,
-`TRANSCRIPTION_PROVIDER` et `MAIL_DRIVER` dans `.env.example`.
+`TRANSCRIPTION_PROVIDER` et `MAIL_DRIVER` dans `back/.env.example`.
 
 **E-mail.** `MAIL_DRIVER=smtp` envoie par nodemailer, avec les variables
 `SMTP_*`. N'importe quel serveur SMTP fait l'affaire — celui de l'hébergeur du

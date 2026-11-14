@@ -9,11 +9,11 @@
     "shared"
   ],
   "scripts": {
-    "dev": "node scripts/dev.mjs",
+    "dev": "concurrently -k -n back,front -c cyan,magenta \"npm run dev -w @vennora/back\" \"npm run dev -w @vennora/front\"",
     "build": "npm run build -w @vennora/front",
     "start": "npm run start -w @vennora/back",
     "typecheck": "npm run typecheck -w @vennora/shared -w @vennora/back -w @vennora/front",
-    "lint": "eslint .",
+    "lint": "npm run lint -w @vennora/shared -w @vennora/back -w @vennora/front",
     "test": "npm run test -w @vennora/back",
     "test:watch": "npm run test:watch -w @vennora/back",
     "db:seed": "npm run db:seed -w @vennora/back",
@@ -23,12 +23,6 @@
     "user:password": "npm run user:password -w @vennora/back --"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
-    "@types/node": "^20",
-    "eslint": "^9",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^14.0.0",
-    "typescript": "^5",
-    "typescript-eslint": "^8.72.2"
+    "concurrently": "10.0.6"
   }
 }

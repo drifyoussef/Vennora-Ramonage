@@ -2,9 +2,9 @@ import { resolve } from "node:path";
 import { config } from "dotenv";
 import { z } from "zod";
 
-// Le `.env` est à la racine du dépôt, partagé par toutes les applications.
+// Le `.env` est dans back/ : seul le back lit la configuration.
 // Les variables déjà définies (hébergeur, CI) l'emportent sur le fichier.
-config({ path: resolve(import.meta.dirname, "../../.env"), quiet: true });
+config({ path: resolve(import.meta.dirname, "../.env"), quiet: true });
 
 /**
  * Variables d'environnement validées au démarrage.

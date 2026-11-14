@@ -6,15 +6,14 @@ import type { StorageDriver, UrlAudience } from "./types";
 /**
  * Stockage sur disque, pour le développement.
  *
- * Les fichiers vivent dans `.storage/` à la racine du projet — hors de
+ * Les fichiers vivent dans `back/.storage/` — hors de
  * `public/`, sciemment : tout ce qui est dans `public/` est servi sans
  * contrôle, or ces fichiers sont des photos de chantier et des signatures
  * clients. Ils ne sortent que par une route qui vérifie la signature.
  */
-// À la racine du dépôt, quel que soit le dossier de lancement : l'API part
-// de back/, les scripts et les tests de back/ aussi, et tous doivent
-// retrouver les mêmes fichiers.
-const ROOT = path.resolve(import.meta.dirname, "../../../../.storage");
+// Dans back/.storage, quel que soit le dossier de lancement : serveur,
+// scripts et tests doivent retrouver les mêmes fichiers.
+const ROOT = path.resolve(import.meta.dirname, "../../../.storage");
 
 /**
  * Refuse toute clé qui pourrait sortir de `.storage/`.

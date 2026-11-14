@@ -5,13 +5,12 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 /**
- * Lint du monorepo : TypeScript partout, règles des hooks React sur
- * l'interface. Les règles des hooks attrapent ce que le compilateur laisse
- * passer — un hook appelé après un retour anticipé plante l'écran au
- * moment où les données arrivent.
+ * Lint du front : TypeScript, environnement navigateur, règles des hooks
+ * React. Elles attrapent ce que le compilateur laisse passer — un hook
+ * appelé après un retour anticipé plante l'écran quand les données arrivent.
  */
 export default defineConfig([
-  globalIgnores(["**/node_modules/**", "**/dist/**", ".storage/**"]),
+  globalIgnores(["node_modules/**", "dist/**"]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -24,11 +23,6 @@ export default defineConfig([
     },
   },
   {
-    files: ["back/**/*.ts", "scripts/**/*.mjs"],
-    languageOptions: { globals: globals.node },
-  },
-  {
-    files: ["front/**/*.{ts,tsx}"],
     languageOptions: { globals: globals.browser },
     plugins: { "react-hooks": reactHooks },
     rules: {

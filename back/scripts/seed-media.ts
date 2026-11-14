@@ -20,8 +20,8 @@ import { randomUUID } from "node:crypto";
  * de stockage : celui-ci est marqué `server-only` et n'est pas importable
  * depuis un script Node.
  */
-// Racine du dépôt, quel que soit le dossier de lancement.
-const STORAGE_ROOT = path.resolve(import.meta.dirname, "../../.storage");
+// back/.storage, quel que soit le dossier de lancement.
+const STORAGE_ROOT = path.resolve(import.meta.dirname, "../.storage");
 
 const CRC_TABLE = (() => {
   const table = new Int32Array(256);

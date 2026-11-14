@@ -100,7 +100,7 @@ données réelles en comptant sur le flou : c'est du CSS, ça se retire.
 ## Fichiers
 
 Tout passe par `back/src/services/storage` : `storeFile`, `fileUrl`,
-`deleteFile`. Les fichiers locaux vont dans `.storage/` à la racine du dépôt
+`deleteFile`. Les fichiers locaux vont dans `back/.storage/`
 — jamais dans `front/public/`, servi sans contrôle, or il s'agit de photos
 de chantier et de signatures clients.
 
