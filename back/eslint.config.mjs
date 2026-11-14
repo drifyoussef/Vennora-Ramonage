@@ -8,6 +8,9 @@ export default defineConfig([
   globalIgnores(["node_modules/**", "dist/**", ".storage/**"]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  // Dossier de référence explicite : sans lui, l'extension ESLint de VS Code,
+  // lancée depuis la racine du dépôt, hésite entre plusieurs tsconfig.
+  { languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname } } },
   {
     rules: {
       // Préfixe « _ » : paramètre volontairement ignoré.

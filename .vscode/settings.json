@@ -1,0 +1,6 @@
+{
+  // Chaque dossier (back, front, shared) a sa propre configuration ESLint :
+  // l'extension doit lancer ESLint depuis le dossier du fichier ouvert, pas
+  // depuis la racine du dépôt.
+  "eslint.workingDirectories": [{ "mode": "auto" }]
+}
