@@ -46,7 +46,7 @@ const serverSchema = z.object({
 
   AI_PROVIDER: z.enum(["mock", "anthropic", "groq"]).default("mock"),
   /** Modèle de rédaction servi par Groq, quand `AI_PROVIDER=groq`. */
-  GROQ_MODEL: z.string().default("qwen/qwen3.6-27b"),
+  GROQ_MODEL: z.string().default("qwen/qwen3.8-27b"),
   ANTHROPIC_API_KEY: z.string().optional(),
   TRANSCRIPTION_PROVIDER: z.enum(["mock", "openai", "groq"]).default("mock"),
   OPENAI_API_KEY: z.string().optional(),
@@ -77,6 +77,34 @@ const serverSchema = z.object({
     .enum(["true", "false"])
     .optional()
     .transform((v) => (v === undefined ? undefined : v === "true")),
+
+  /**
+   * Paiement en ligne. `off` : les offres se changent à la main
+   * (`npm run org:plan`) et la page Abonnement le dit. `stripe` : Checkout,
+   * portail client et webhook.
+   */
+  BILLING_DRIVER: z.enum(["off", "stripe"]).default("off"),
+  /** Clé secrète Stripe. `sk_test_…` hors production : voir plus bas. */
+  STRIPE_SECRET_KEY: z.string().optional(),
+  /** Secret de signature du webhook (`whsec_…`, donné par `stripe listen`). */
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  /**
+   * Durée de l'essai gratuit, en jours : ouvert à la création de l'entreprise
+   * (offre Pro), ou à la première souscription pour une entreprise plus
+   * ancienne qui n'en a jamais eu.
+   */
+  STRIPE_TRIAL_DAYS: z.coerce.number().int().min(0).max(90).default(14),
+  /**
+   * Grille proposée aux nouvelles souscriptions. `lancement` : −20 % sous le
+   * tarif public, gardé ensuite par l'abonné (« prix garanti »). Passer à
+   * `public` ferme le tarif de lancement aux nouveaux venus seulement.
+   */
+  STRIPE_TARIF: z.enum(["lancement", "public"]).default("lancement"),
+  /**
+   * Configuration du portail client (`bpc_…`) créée par
+   * `npm run stripe:setup`. Vide : la configuration par défaut du compte.
+   */
+  STRIPE_PORTAL_CONFIGURATION: z.string().optional(),
 });
 
 function load() {
@@ -131,6 +159,25 @@ function load() {
   if (env.MAIL_DRIVER === "smtp" && env.SMTP_USER && !env.SMTP_PASSWORD) {
     throw new Error("SMTP_USER est renseigné mais SMTP_PASSWORD manque.");
   }
+  if (env.BILLING_DRIVER === "stripe") {
+    const missing = (["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] as const).filter(
+      (k) => !env[k],
+    );
+    if (missing.length > 0) {
+      throw new Error(`BILLING_DRIVER=stripe mais ${missing.join(", ")} manquant(e)(s).`);
+    }
+    const key = env.STRIPE_SECRET_KEY!;
+    if (!/^(sk|rk)_(test|live)_/.test(key)) {
+      throw new Error("STRIPE_SECRET_KEY ne ressemble pas à une clé Stripe (sk_test_… attendu).");
+    }
+    // Une clé live sur un poste de développement, c'est un vrai débit au
+    // premier essai de carte. Elle n'est acceptée qu'en production.
+    if (key.includes("_live_") && env.NODE_ENV !== "production") {
+      throw new Error(
+        "STRIPE_SECRET_KEY est une clé live : seules les clés de test (sk_test_…) sont acceptées hors production.",
+      );
+    }
+  }
   // Gmail réécrit silencieusement l'expéditeur quand il ne correspond pas au
   // compte authentifié : le client reçoit alors un rapport signé d'une
   // adresse à laquelle personne ne s'attend. Un avertissement, pas une
@@ -153,3 +200,6 @@ export const env = load();
 
 export const isProduction = env.NODE_ENV === "production";
 export const isDevelopment = env.NODE_ENV === "development";
+
+/** Stripe branché sur un compte de test : aucun paiement réel. */
+export const stripeTestMode = !env.STRIPE_SECRET_KEY?.includes("_live_");

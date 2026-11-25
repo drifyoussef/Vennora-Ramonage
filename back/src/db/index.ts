@@ -75,7 +75,12 @@ export const INDEXES: Record<ModelName, IndexDef[]> = {
     { fields: ["tradeId", "code"], unique: true },
     { fields: ["tradeId", "active", "sortOrder"] },
   ],
-  Organization: [{ fields: ["slug"], unique: true }],
+  Organization: [
+    { fields: ["slug"], unique: true },
+    // Le webhook Stripe retrouve l'entreprise par son client Stripe. Pas
+    // unique : les entreprises sans abonnement ont toutes `null`.
+    { fields: ["stripeCustomerId"] },
+  ],
   User: [
     { fields: ["email"], unique: true },
     { fields: ["orgId", "active"] },

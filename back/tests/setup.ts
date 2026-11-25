@@ -11,3 +11,4 @@ process.env.AI_PROVIDER = "mock";
 process.env.TRANSCRIPTION_PROVIDER = "mock";
 process.env.MAIL_DRIVER = "console";
 process.env.STORAGE_DRIVER = "local";
+process.env.BILLING_DRIVER = "off";

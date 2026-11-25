@@ -5,6 +5,7 @@ import { syncTradeCatalogs } from "./catalog-sync";
 import { UserRole } from "@vennora/shared/enums";
 import { password as passwordSchema } from "@vennora/shared/schemas";
 import { TRADES, type TradeSlug } from "@vennora/shared/verticals/registry";
+import { essaiInitial } from "../services/billing";
 
 /**
  * Création d'une organisation et de son premier administrateur.
@@ -117,6 +118,8 @@ export async function createOrganization(
     postalCode: data.codePostal,
     city: data.ville,
     siret: data.siret,
+    // Paiement en ligne actif : essai Pro de quatorze jours, sans démarche.
+    ...essaiInitial(),
   });
 
   const admin = await db.user.insert({

@@ -33,6 +33,14 @@ export const FONCTIONNALITES = [
 
 export type Fonctionnalite = (typeof FONCTIONNALITES)[number];
 
+/** Libellé commercial de chaque fonctionnalité (page Abonnement). */
+export const FONCTIONNALITE_LABEL: Record<Fonctionnalite, string> = {
+  "redaction-assistee": "Dictée et compte-rendu assisté",
+  "envoi-rapport": "Envoi du rapport par e-mail",
+  rappels: "Suivi des échéances et rappels",
+  export: "Export complet des données",
+};
+
 const OFFRES: Record<
   Plan,
   { libelle: string; utilisateurs: number; fonctionnalites: Fonctionnalite[] }
@@ -40,7 +48,9 @@ const OFFRES: Record<
   [Plan.ESSENTIEL]: {
     libelle: "Essentiel",
     utilisateurs: 1,
-    fonctionnalites: [],
+    // Un artisan seul s'attend à pouvoir envoyer son rapport : sans l'envoi,
+    // l'offre d'entrée paraît bridée et ne se vend pas (voir le site vitrine).
+    fonctionnalites: ["envoi-rapport"],
   },
   [Plan.FONDATEUR]: {
     libelle: "Fondateur",
@@ -71,6 +81,37 @@ const OFFRES: Record<
  * souscrit plus.
  */
 const ORDRE: Plan[] = [Plan.ESSENTIEL, Plan.PRO, Plan.BUSINESS, Plan.ENTREPRISE];
+
+/**
+ * Offres qui se souscrivent en ligne (Stripe). Fondateur ne se souscrit plus,
+ * Entreprise se négocie au contrat : ni l'une ni l'autre n'a de prix public,
+ * et une entreprise qui en bénéficie ne doit pas pouvoir en sortir d'un clic.
+ */
+export const OFFRES_EN_LIGNE: readonly Plan[] = [Plan.ESSENTIEL, Plan.PRO, Plan.BUSINESS];
+
+export function souscriptibleEnLigne(plan: Plan): boolean {
+  return OFFRES_EN_LIGNE.includes(plan);
+}
+
+/**
+ * Utilisateurs au-delà du forfait : facturés à l'unité sur Pro et Business.
+ * Essentiel n'en accepte pas — c'est l'offre d'un artisan seul, et le
+ * deuxième compte est le moment naturel de passer à Pro.
+ */
+export function supplementUtilisateurs(plan: Plan): boolean {
+  return plan === Plan.PRO || plan === Plan.BUSINESS;
+}
+
+/** Utilisateurs actifs à facturer en plus du forfait. */
+export function utilisateursSupplementaires(plan: Plan, actifs: number): number {
+  if (!supplementUtilisateurs(plan)) return 0;
+  return Math.max(0, actifs - utilisateursInclus(plan));
+}
+
+/** Ce que comprend une offre, pour la présenter (page Abonnement). */
+export function fonctionnalitesOffre(plan: Plan): readonly Fonctionnalite[] {
+  return OFFRES[plan].fonctionnalites;
+}
 
 export function libelleOffre(plan: Plan): string {
   return OFFRES[plan].libelle;

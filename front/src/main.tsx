@@ -78,6 +78,7 @@ const router = createBrowserRouter([
       { path: "/scanner", lazy: page(() => import("@/pages/scanner/scanner"), "ScannerPage") },
       { path: "/e/:token", lazy: page(() => import("@/pages/scanner/qr-resolution"), "QrResolvePage") },
       { path: "/parametres", lazy: page(() => import("@/pages/parametres/parametres"), "SettingsPage") },
+      { path: "/parametres/abonnement", lazy: page(() => import("@/pages/parametres/abonnement"), "SubscriptionPage") },
       { path: "/parametres/equipe/nouveau", lazy: page(() => import("@/pages/parametres/membre-nouveau"), "NewMemberPage") },
       { path: "/parametres/equipe/:id/modifier", lazy: page(() => import("@/pages/parametres/membre-modifier"), "EditMemberPage") },
       { path: "/profil", lazy: page(() => import("@/pages/profil/profil"), "ProfilePage") },

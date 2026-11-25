@@ -20,7 +20,8 @@
     "db:indexes": "npm run db:indexes -w @vennora/back",
     "org:create": "npm run org:create -w @vennora/back --",
     "org:plan": "npm run org:plan -w @vennora/back --",
-    "user:password": "npm run user:password -w @vennora/back --"
+    "user:password": "npm run user:password -w @vennora/back --",
+    "stripe:setup": "npm run stripe:setup -w @vennora/back --"
   },
   "devDependencies": {
     "concurrently": "10.0.6"

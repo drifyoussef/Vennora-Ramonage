@@ -8,6 +8,7 @@ import rateLimit from "@fastify/rate-limit";
 import { env, isProduction } from "./env";
 import { registerHttpConventions } from "./http";
 import { mongo } from "./mongo";
+import { abonnementRoutes, registerGardeLectureSeule } from "./routes/abonnement";
 import { authRoutes } from "./routes/auth";
 import { clientRoutes } from "./routes/clients";
 import { documentRoutes } from "./routes/documents";
@@ -68,6 +69,8 @@ export async function buildServer() {
     app.get("/", (_request, reply) => reply.header("Cache-Control", "no-cache").sendFile("index.html"));
   }
 
+  // Avant toute route : une entreprise en lecture seule n'écrit plus rien.
+  registerGardeLectureSeule(app);
   app.get("/api/sante", async () => ({ ok: true }));
   await app.register(authRoutes);
   await app.register(clientRoutes);
@@ -82,6 +85,7 @@ export async function buildServer() {
   await app.register(mediaRoutes);
   await app.register(reportRoutes);
   await app.register(fileRoutes);
+  await app.register(abonnementRoutes);
 
   app.addHook("onClose", async () => {
     await mongo.close();

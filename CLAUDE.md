@@ -94,6 +94,16 @@ exigerFonctionnalite(context, "export");   // route : refuse
 autorise(user.org.plan, "export")          // page : ne rend pas le composant
 ```
 
+`Organization.plan` ne change que par `npm run org:plan` ou sur un
+abonnement relu chez Stripe (`back/src/services/billing`) — jamais sur la foi
+d'une requête du navigateur, pas même le retour de Checkout.
+
+Paiement en ligne actif, une entreprise sans essai ni abonnement est en
+**lecture seule** : la garde `registerGardeLectureSeule` refuse toute écriture
+de l'API (402). Une nouvelle route d'écriture n'a rien à faire pour en
+bénéficier ; si elle doit rester permise (souscrire, faire de la place dans
+l'équipe), l'ajouter à `permiseEnLectureSeule`.
+
 Le composant `ZoneVerrouillee` ne reçoit qu'un décor. Ne jamais y passer de
 données réelles en comptant sur le flou : c'est du CSS, ça se retire.
 

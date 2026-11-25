@@ -1,4 +1,12 @@
-import { AnomalySeverity, AnomalyStatus, CustomerKind, DocumentCategory, InterventionStatus, UserRole } from "./enums";
+import {
+  AnomalySeverity,
+  AnomalyStatus,
+  CustomerKind,
+  DocumentCategory,
+  InterventionStatus,
+  SubscriptionStatus,
+  UserRole,
+} from "./enums";
 
 /**
  * Libellés français des énumérations.
@@ -92,3 +100,33 @@ export function plural(
   if (count === 0 && zero) return zero;
   return `${count} ${count > 1 ? pluralForm : singular}`;
 }
+
+export const SUBSCRIPTION_STATUS_LABEL: Record<SubscriptionStatus, string> = {
+  [SubscriptionStatus.TRIALING]: "Essai gratuit",
+  [SubscriptionStatus.ACTIVE]: "Actif",
+  [SubscriptionStatus.PAST_DUE]: "Paiement en retard",
+  [SubscriptionStatus.UNPAID]: "Impayé",
+  [SubscriptionStatus.CANCELED]: "Résilié",
+  [SubscriptionStatus.INCOMPLETE]: "Paiement à finaliser",
+  [SubscriptionStatus.INCOMPLETE_EXPIRED]: "Paiement non abouti",
+  [SubscriptionStatus.PAUSED]: "Suspendu",
+};
+
+/** Classe Tailwind de la pastille d'état d'abonnement. */
+export const SUBSCRIPTION_STATUS_TONE: Record<SubscriptionStatus, string> = {
+  [SubscriptionStatus.TRIALING]:
+    "bg-status-planned/12 text-status-planned border-status-planned/25",
+  [SubscriptionStatus.ACTIVE]: "bg-status-done/12 text-status-done border-status-done/25",
+  [SubscriptionStatus.PAST_DUE]:
+    "bg-severity-high/12 text-severity-high border-severity-high/25",
+  [SubscriptionStatus.UNPAID]:
+    "bg-severity-critical/12 text-severity-critical border-severity-critical/25",
+  [SubscriptionStatus.CANCELED]:
+    "bg-status-cancelled/12 text-status-cancelled border-status-cancelled/25",
+  [SubscriptionStatus.INCOMPLETE]:
+    "bg-severity-medium/12 text-severity-medium border-severity-medium/25",
+  [SubscriptionStatus.INCOMPLETE_EXPIRED]:
+    "bg-status-cancelled/12 text-status-cancelled border-status-cancelled/25",
+  [SubscriptionStatus.PAUSED]:
+    "bg-status-cancelled/12 text-status-cancelled border-status-cancelled/25",
+};

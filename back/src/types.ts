@@ -5,6 +5,7 @@
  * Une route qui change sa réponse casse la compilation du front au lieu de
  * produire un écran vide en production.
  */
+import type { Plan, SubscriptionStatus } from "@vennora/shared/enums";
 import type { CustomerDetail } from "./data/customers";
 import type { getDashboard } from "./data/dashboard";
 import type { EquipmentDetail } from "./data/equipment";
@@ -64,6 +65,45 @@ export interface RemindersView {
   reminders: ReminderItem[];
   pending: number;
   overdue: number;
+}
+
+/** GET /api/abonnement */
+export interface SubscriptionView {
+  /** `BILLING_DRIVER=stripe`. Sinon, les offres se changent à la main. */
+  paiementEnLigne: boolean;
+  /** Compte Stripe de test : aucun paiement réel. */
+  modeTest: boolean;
+  /** Fondateur ou Entreprise : rien à souscrire en ligne. */
+  gereHorsLigne: boolean;
+  plan: Plan;
+  status: SubscriptionStatus | null;
+  abonnementEnCours: boolean;
+  portailDisponible: boolean;
+  /** Essai fini ou abonnement arrêté : consultation seulement. */
+  lectureSeule: boolean;
+  /** Fin de l'essai en cours (essai de l'application ou de Stripe). */
+  essaiJusquAu: Date | null;
+  trialEndsAt: Date | null;
+  currentPeriodEnd: Date | null;
+  cancelAtPeriodEnd: boolean;
+  /** Checkout offrira un essai sans carte (entreprise sans essai passé). */
+  essaiALaSouscription: boolean;
+  joursEssai: number;
+  /** Grille affichée : celle de l'abonné, ou celle proposée aux nouveaux. */
+  grille: "lancement" | "public";
+  utilisateursActifs: number;
+  /** Prix d'un utilisateur au-delà du forfait (Pro, Business). */
+  prixUtilisateur: { montant: number; devise: string } | null;
+  catalogueIndisponible: boolean;
+  offres: {
+    plan: Plan;
+    /** Centimes, hors taxes. */
+    montant: number;
+    devise: string;
+    intervalle: string;
+    /** Tarif public, cité en regard du tarif de lancement. */
+    montantPublic: number | null;
+  }[];
 }
 
 /** GET /api/parametres */

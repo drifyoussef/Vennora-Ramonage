@@ -77,6 +77,23 @@ export const Plan = {
 } as const;
 export type Plan = ValueOf<typeof Plan>;
 
+/**
+ * État de l'abonnement en ligne, recopié de Stripe (`subscription.status`,
+ * en majuscules). Ne décide de rien à lui seul : c'est `Organization.plan`
+ * qui ouvre les fonctionnalités, et le webhook qui le met à jour.
+ */
+export const SubscriptionStatus = {
+  TRIALING: "TRIALING",
+  ACTIVE: "ACTIVE",
+  PAST_DUE: "PAST_DUE",
+  UNPAID: "UNPAID",
+  CANCELED: "CANCELED",
+  INCOMPLETE: "INCOMPLETE",
+  INCOMPLETE_EXPIRED: "INCOMPLETE_EXPIRED",
+  PAUSED: "PAUSED",
+} as const;
+export type SubscriptionStatus = ValueOf<typeof SubscriptionStatus>;
+
 export const DocumentCategory = {
   REPORT: "REPORT",
   INVOICE: "INVOICE",

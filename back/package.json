@@ -13,6 +13,7 @@
     "org:create": "tsx scripts/creer-organisation.ts",
     "org:plan": "tsx scripts/definir-offre.ts",
     "user:password": "tsx scripts/reinitialiser-mot-de-passe.ts",
+    "stripe:setup": "tsx scripts/stripe-configurer.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint ."
@@ -36,6 +37,7 @@
     "nodemailer": "^10.5.0",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
+    "stripe": "^23.2.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

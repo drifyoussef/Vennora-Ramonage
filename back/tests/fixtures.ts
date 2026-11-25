@@ -52,6 +52,7 @@ function contextFor(
         tradeSlug,
         tradeName: "Ramonage",
         plan,
+        acces: { lectureSeule: false, essaiJusquAu: null, abonne: false },
       },
     },
   };

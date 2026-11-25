@@ -68,6 +68,7 @@ Current IP Address. Fréquent en partage de connexion, où l'IP change.
 | `npm run org:create`    | crée une entreprise et son administrateur                      |
 | `npm run org:plan`      | consulte ou change l'offre d'une entreprise                    |
 | `npm run user:password` | réinitialise un mot de passe                                   |
+| `npm run stripe:setup`  | crée produits, prix et portail sur le compte Stripe de test    |
 
 ---
 
@@ -121,7 +122,7 @@ serveur la lit pour refuser.
 | --- | --- | --- | --- | --- | --- |
 | Clients, sites, équipements, planning, photos, QR, rapport PDF | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Dictée et compte-rendu assisté | | ✅ | ✅ | ✅ | ✅ |
-| Envoi du rapport par e-mail | | ✅ | ✅ | ✅ | ✅ |
+| Envoi du rapport par e-mail | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Suivi des échéances | | ✅ | ✅ | ✅ | ✅ |
 | Export complet depuis l'application | | | | ✅ | ✅ |
 
@@ -135,17 +136,93 @@ avec ses données — le composant réel n'est jamais affiché — et la route
 d'API correspondante appelle `exigerFonctionnalite`, qui refuse. Retirer un
 filtre CSS ne révèle donc rien, et forger la requête ne fait rien.
 
-Le nombre d'utilisateurs compris est déclaré dans la matrice mais **n'est pas
-appliqué** : rien n'empêche aujourd'hui un quatrième compte sur une offre qui
-en comprend trois. C'est un choix, pas un oubli — tant que la facturation est
-manuelle, mieux vaut un client servi qu'un client bloqué un samedi.
+Le nombre d'utilisateurs compris n'est appliqué **qu'avec le paiement en
+ligne** (section suivante) : Essentiel refuse un deuxième compte actif et
+propose Pro ; Pro et Business acceptent tout le monde et facturent chaque
+utilisateur en plus. Paiement en ligne coupé, rien n'est bloqué — mieux vaut
+un client servi qu'un client bloqué un samedi.
 
-Changer l'offre d'un client se fait hors de l'application :
+Changer l'offre d'un client se fait hors de l'application, ou par le
+paiement en ligne quand il est activé. Un client facturé à la main se met en
+Fondateur ou Entreprise : le paiement en ligne ne touche jamais ces deux-là.
 
 ```bash
 npm run org:plan                                    # état des lieux
 npm run org:plan -- --slug ramonage-cevennes --offre PRO
 ```
+
+### Paiement en ligne (Stripe) — phase de test
+
+Le parcours commercial, de la création du compte au renouvellement :
+
+1. **Essai Pro automatique.** Une entreprise créée par `npm run org:create`
+   démarre sur l'offre Pro pour 14 jours (`STRIPE_TRIAL_DAYS`), sans carte ni
+   démarche. Un bandeau compte les jours restants.
+2. **Choisir pendant l'essai ne l'écourte pas.** Depuis **Paramètres →
+   Abonnement**, l'administrateur choisit Essentiel, Pro ou Business ; Stripe
+   ne prélève qu'à la fin prévue de l'essai. Une entreprise plus ancienne,
+   sans essai passé, en obtient un à la souscription, sans carte.
+3. **Fin d'essai sans offre : lecture seule.** Tout reste consultable, rien
+   ne s'enregistre (une garde sur toute l'API, `registerGardeLectureSeule`).
+   Restent permis : se connecter, souscrire, désactiver un membre, changer un
+   mot de passe. Même chose après une résiliation ou un impayé définitif.
+4. **Tarif de lancement** (`STRIPE_TARIF=lancement`, par défaut) : 31 / 79 /
+   199 € HT au lieu de 39 / 99 / 249 €, comme sur le site. L'abonné le garde,
+   y compris en changeant d'offre ; passer à `public` ne concerne que les
+   nouveaux venus.
+5. **Utilisateurs en plus** : 20 € HT par utilisateur actif au-delà du forfait
+   (Pro : 3, Business : 10), recalculés à chaque ajout ou désactivation.
+6. **Changement d'offre dans l'application**, immédiat, au prorata. Le
+   portail Stripe sert à la carte, aux factures et à la résiliation.
+
+**Stripe décide, Vennora recopie.** Le retour de Checkout n'ouvre rien —
+n'importe qui peut ouvrir cette adresse. `Organization.plan` ne bouge que sur
+un abonnement relu chez Stripe : événement signé reçu sur
+`/api/stripe/webhook`, ou réponse de Stripe à un changement d'offre (voir
+`back/src/services/billing`). Impayé : l'offre reste ouverte pendant les
+relances de Stripe. Fondateur et Entreprise ne sont jamais touchées. Hors
+production, une clé `sk_live_` fait échouer le démarrage.
+
+Mise en route, sur un compte Stripe en **mode test** :
+
+1. Dans `back/.env` : `STRIPE_SECRET_KEY=sk_test_…` (tableau de bord Stripe,
+   Développeurs → Clés API).
+2. `npm run stripe:setup` : crée les produits, les prix publics et de
+   lancement, le prix de l'utilisateur supplémentaire (montants dans
+   `TARIFS`, `back/scripts/stripe-configurer.ts`, à tenir à jour avec
+   `vennora-landing/src/components/tarifs.tsx`) et la configuration du
+   portail client. Recopier l'identifiant `bpc_…` affiché dans
+   `STRIPE_PORTAL_CONFIGURATION`. Relançable sans doublon.
+3. Installer la [CLI Stripe](https://docs.stripe.com/stripe-cli), puis
+   `stripe login` et, dans un terminal à part :
+   `stripe listen --forward-to localhost:4000/api/stripe/webhook`. Recopier le
+   secret `whsec_…` affiché dans `STRIPE_WEBHOOK_SECRET`.
+4. `BILLING_DRIVER=stripe`, puis `npm run db:indexes` et `npm run dev`.
+
+Attention : une fois `BILLING_DRIVER=stripe`, une entreprise sans essai ni
+abonnement — le jeu de démonstration, par exemple — passe en lecture seule.
+C'est voulu ; pour la rouvrir, souscrire en mode test (essai sans carte) ou
+`npm run org:plan -- --slug … --offre ENTREPRISE`.
+
+Scénarios à dérouler (cartes rappelées sur la page en mode test) :
+
+| Scénario | Comment | Attendu |
+| --- | --- | --- |
+| Essai automatique | `npm run org:create …`, se connecter | Pro ouvert, bandeau « encore 14 jours » |
+| Souscrire pendant l'essai | Choisir Pro, carte `4242 4242 4242 4242` | Abonné, premier prélèvement à la fin de l'essai |
+| Essai à la souscription | Entreprise ancienne, choisir Pro sans carte | « Essai gratuit » 14 jours |
+| 3-D Secure | `4000 0025 0000 3155` | Authentification demandée, puis actif |
+| Carte refusée | `4000 0000 0000 9995` | Checkout refuse, rien ne change |
+| Fin d'essai | Passer `trialEndsAt` dans le passé, ou une [horloge de test](https://docs.stripe.com/billing/testing/test-clocks) | Bandeau « Lecture seule », enregistrements refusés (402) |
+| Deuxième membre sur Essentiel | Ajouter un membre | Refus, Pro proposé |
+| Membre en plus sur Pro | 4ᵉ membre actif | Ligne « utilisateur supplémentaire » × 1 chez Stripe |
+| Changement d'offre | Pro → Business, confirmer | Export débloqué aussitôt, tarif de lancement gardé |
+| Résiliation | Portail → annuler | « Résiliation programmée », offre gardée jusqu'à l'échéance |
+| Fin d'abonnement | `stripe trigger customer.subscription.deleted` | Lecture seule |
+
+Les tests automatiques (`back/tests/abonnement.test.ts`) couvrent la
+traduction abonnement → offre, l'accès (essai, lecture seule), les
+utilisateurs facturés en plus et la signature du webhook, sans appel réseau.
 
 ---
 
@@ -260,7 +337,8 @@ données.
 
 Trois briques tournent en implémentation simulée tant qu'aucune clé n'est
 fournie : la transcription vocale, la rédaction assistée et l'envoi
-d'e-mails. Chacune est derrière une interface — voir `AI_PROVIDER`,
+d'e-mails. Le paiement en ligne, lui, est coupé (`BILLING_DRIVER=off`) tant
+qu'il n'est pas configuré — voir « Paiement en ligne » plus haut. Chacune est derrière une interface — voir `AI_PROVIDER`,
 `TRANSCRIPTION_PROVIDER` et `MAIL_DRIVER` dans `back/.env.example`.
 
 **E-mail.** `MAIL_DRIVER=smtp` envoie par nodemailer, avec les variables
@@ -271,7 +349,7 @@ l'adresse professionnelle de l'artisan. Le chiffrement est déduit du port
 (465 implicite, STARTTLS ailleurs) sauf si `SMTP_SECURE` le force.
 
 **Rédaction assistée.** `AI_PROVIDER=groq` branche un modèle ouvert servi par
-Groq — `qwen/qwen3.6-27b` par défaut — avec le même contrat que l'adaptateur
+Groq — `qwen/qwen3.8-27b` par défaut — avec le même contrat que l'adaptateur
 Anthropic : les six sections sont imposées par un schéma JSON strict, pas
 demandées dans le prompt.
 

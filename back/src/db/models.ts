@@ -8,6 +8,7 @@ import type {
   Plan,
   ReminderStatus,
   ReportOrigin,
+  SubscriptionStatus,
   TranscriptStatus,
   UserRole,
 } from "@vennora/shared/enums";
@@ -97,6 +98,28 @@ export interface Organization {
   tradeId: string;
   /** Réglages libres (mentions légales du rapport, expéditeur e-mail…). */
   settings: Json | null;
+
+  // ─── Abonnement en ligne (Stripe) ──────────────────────────────────────
+  // Tous facultatifs : une entreprise embarquée à la main n'en a aucun, et
+  // les documents déjà en base n'ont pas à être complétés. Seul le webhook
+  // Stripe les écrit (voir services/billing) ; `plan` reste ce qui décide.
+
+  /** Client Stripe (`cus_…`), créé à la première souscription. */
+  stripeCustomerId: string | null;
+  /** Abonnement Stripe en cours (`sub_…`), remis à `null` à la résiliation. */
+  stripeSubscriptionId: string | null;
+  subscriptionStatus: SubscriptionStatus | null;
+  /** Fin de l'essai gratuit en cours. */
+  trialEndsAt: Date | null;
+  /** Date du prochain renouvellement (ou de la fin, si résilié). */
+  currentPeriodEnd: Date | null;
+  /** Résiliation programmée à la fin de la période en cours. */
+  cancelAtPeriodEnd: boolean | null;
+  /** Premier essai gratuit : un seul par entreprise. */
+  trialUsedAt: Date | null;
+  /** Grille de l'abonnement : un abonné au tarif de lancement le garde. */
+  grilleTarifaire: "lancement" | "public" | null;
+
   createdAt: Date;
   updatedAt: Date;
 }

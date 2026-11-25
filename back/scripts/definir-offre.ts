@@ -5,8 +5,9 @@
  *
  * Volontairement hors de l'application : ouvrir une fonctionnalité payante
  * est une décision commerciale, elle ne doit pas être à portée de clic d'un
- * administrateur client. Le jour où un paiement en ligne existera, c'est lui
- * qui appellera ce chemin.
+ * administrateur client. Le paiement en ligne (Stripe) passe, lui, par son
+ * webhook : une offre changée ici sur une entreprise abonnée en ligne sera
+ * réécrite au prochain événement Stripe.
  */
 import { connectMongo } from "../src/db";
 import { env } from "../src/env";

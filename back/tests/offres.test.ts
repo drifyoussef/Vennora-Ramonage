@@ -11,14 +11,14 @@ import { createTestOrg, destroyTestOrg, type TestOrg } from "./fixtures";
  * mais le refus côté serveur, seul rempart réel.
  */
 describe("matrice des offres", () => {
-  it("n'ouvre rien de payant à l'offre la plus basse", () => {
+  it("n'ouvre à l'offre la plus basse que l'envoi du rapport", () => {
+    expect(autorise(Plan.ESSENTIEL, "envoi-rapport")).toBe(true);
     expect(autorise(Plan.ESSENTIEL, "redaction-assistee")).toBe(false);
-    expect(autorise(Plan.ESSENTIEL, "envoi-rapport")).toBe(false);
     expect(autorise(Plan.ESSENTIEL, "rappels")).toBe(false);
     expect(autorise(Plan.ESSENTIEL, "export")).toBe(false);
   });
 
-  it("ouvre la rédaction et l'envoi dès l'offre Pro, l'export à Business", () => {
+  it("ouvre la rédaction dès l'offre Pro, l'export à Business", () => {
     expect(autorise(Plan.PRO, "redaction-assistee")).toBe(true);
     expect(autorise(Plan.PRO, "envoi-rapport")).toBe(true);
     expect(autorise(Plan.PRO, "export")).toBe(false);
@@ -45,6 +45,7 @@ describe("matrice des offres", () => {
   });
 
   it("désigne la première offre suffisante, pour le message", () => {
+    expect(offreRequise("envoi-rapport")).toBe(Plan.ESSENTIEL);
     expect(offreRequise("redaction-assistee")).toBe(Plan.PRO);
     expect(offreRequise("export")).toBe(Plan.BUSINESS);
   });

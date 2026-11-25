@@ -3,7 +3,7 @@ import { RequirePermission } from "@/components/vennora/require-permission";
 import { useUser } from "@/lib/user";
 import { pageState, useApiQuery } from "@/lib/query";
 import { Link } from "react-router";
-import { Building2, Download, Lock, Plus, Users } from "lucide-react";
+import { Building2, CreditCard, Download, Lock, Plus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldGrid, PageHeader } from "@/components/vennora/page";
@@ -151,9 +151,17 @@ function Settings() {
           contrepartie de « vos données vous appartiennent ». Un client qui
           doit le demander ne le croit qu'à moitié. */}
       <section className="mb-6 rounded-xl border border-border bg-card p-5">
-        <h2 className="font-heading mb-1 text-base font-semibold">
-          Votre offre
-        </h2>
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-heading text-base font-semibold">
+            Votre offre
+          </h2>
+          <Button asChild size="sm" variant="outline" className="gap-1.5">
+            <Link to="/parametres/abonnement">
+              <CreditCard className="size-4" />
+              Abonnement
+            </Link>
+          </Button>
+        </div>
         <p className="text-sm text-muted-foreground text-pretty">
           Vous êtes à l&apos;offre{" "}
           <span className="text-foreground font-medium">
@@ -162,7 +170,8 @@ function Settings() {
           {" "}: {utilisateursInclus(user.org.plan) === Infinity
             ? "utilisateurs illimités"
             : `${utilisateursInclus(user.org.plan)} utilisateur(s) compris`}
-          . Pour en changer, écrivez-nous.
+          . Changez d&apos;offre, de moyen de paiement ou retrouvez vos
+          factures depuis la page Abonnement.
         </p>
       </section>
 

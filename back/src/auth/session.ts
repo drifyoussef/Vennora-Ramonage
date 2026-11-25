@@ -2,6 +2,7 @@ import { jwtVerify, SignJWT } from "jose";
 import type { Plan, UserRole } from "@vennora/shared/enums";
 import { env, isProduction } from "../env";
 import { rootDb } from "../mongo";
+import { accesOrganisation, type Acces } from "../services/billing";
 
 /**
  * Session : un jeton signé dans un cookie `httpOnly`.
@@ -84,6 +85,8 @@ export interface CurrentUser {
     tradeName: string;
     /** Offre souscrite : c'est elle qui ouvre ou ferme les fonctionnalités. */
     plan: Plan;
+    /** Essai, abonnement, lecture seule (voir `accesOrganisation`). */
+    acces: Acces;
   };
 }
 
@@ -98,7 +101,17 @@ export interface CurrentUser {
 export async function loadCurrentUser(
   claims: SessionClaims,
 ): Promise<CurrentUser | null> {
-  const orgFields = { fields: ["name", "logoKey", "plan", "tradeId"] } as const;
+  const orgFields = {
+    fields: [
+      "name",
+      "logoKey",
+      "plan",
+      "tradeId",
+      "subscriptionStatus",
+      "stripeSubscriptionId",
+      "trialEndsAt",
+    ],
+  } as const;
   const tradeFields = { fields: ["slug", "name"] } as const;
 
   const [user, orgFromToken, tradeFromToken] = await Promise.all([
@@ -162,6 +175,12 @@ export async function loadCurrentUser(
       tradeSlug: trade.slug,
       tradeName: trade.name,
       plan: org.plan,
+      acces: accesOrganisation({
+        plan: org.plan,
+        subscriptionStatus: org.subscriptionStatus ?? null,
+        stripeSubscriptionId: org.stripeSubscriptionId ?? null,
+        trialEndsAt: org.trialEndsAt ?? null,
+      }),
     },
   };
 }

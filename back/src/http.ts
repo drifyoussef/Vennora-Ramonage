@@ -3,6 +3,9 @@ import type {} from "@fastify/static";
 import { z } from "zod";
 import { AppError, ForbiddenError, ValidationError } from "@vennora/shared/errors";
 
+/** Adresse du webhook Stripe (voir routes/abonnement.ts). */
+export const STRIPE_WEBHOOK_PATH = "/api/stripe/webhook";
+
 /**
  * Conventions HTTP communes à toutes les routes.
  *
@@ -55,6 +58,9 @@ export function registerHttpConventions(
    */
   app.addHook("onRequest", async (request: FastifyRequest) => {
     if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return;
+    // Le webhook Stripe vient de Stripe, pas d'un navigateur : pas de cookie
+    // à protéger, et c'est sa signature qui l'authentifie (routes/abonnement).
+    if (request.url === STRIPE_WEBHOOK_PATH) return;
     if (request.headers["x-vennora"] !== "1") {
       throw new ForbiddenError("Requête refusée.");
     }

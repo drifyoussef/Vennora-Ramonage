@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router";
 import { Loader2 } from "lucide-react";
 
+import { BandeauAbonnement } from "@/components/shell/bandeau-abonnement";
 import { MobileNav } from "@/components/shell/mobile-nav";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
@@ -55,6 +56,7 @@ export function AppLayout() {
               colorHex: user.colorHex,
             }}
           />
+          <BandeauAbonnement user={user} />
 
           {/* pb-24 : dégage la barre de navigation basse sur téléphone. */}
           <main className="flex-1 px-4 pt-5 pb-24 sm:px-6 lg:px-8 lg:pb-10">

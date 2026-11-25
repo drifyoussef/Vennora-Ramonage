@@ -16,6 +16,7 @@ import { requireContext, type AppContext } from "../context";
 import { one, isDuplicateKeyError } from "../db";
 import { getEquipmentTypes, getInterventionTypes } from "../data/catalog";
 import { parse } from "../http";
+import { synchroniserUtilisateurs, verifierPlace } from "../services/billing";
 import { audit } from "../tenant";
 
 const idParams = z.object({ id: objectId });
@@ -25,6 +26,14 @@ function emailTaken(): never {
   throw new ValidationError("Cette adresse e-mail est déjà utilisée.", {
     email: ["Cette adresse e-mail est déjà utilisée."],
   });
+}
+
+/**
+ * Refuse un membre actif de plus quand l'offre n'en comprend pas (Essentiel).
+ * Pro et Business acceptent : l'utilisateur en plus est facturé.
+ */
+async function exigerPlace({ db, user }: AppContext): Promise<void> {
+  verifierPlace(user.org.plan, await db.user.count({ active: true }));
 }
 
 /**
@@ -83,8 +92,10 @@ export async function equipeRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/api/equipe", async (request) => {
-    const { db, ctx } = await requireContext(request, "user.manage");
+    const context = await requireContext(request, "user.manage");
+    const { db, ctx } = context;
     const input = parse(userCreateSchema, request.body);
+    await exigerPlace(context);
     try {
       const { id } = await db.user.insert({
         orgId: ctx.orgId,
@@ -103,6 +114,7 @@ export async function equipeRoutes(app: FastifyInstance): Promise<void> {
         entityId: id,
         metadata: { email: input.email, role: input.role },
       });
+      await synchroniserUtilisateurs(ctx.orgId);
       return { id };
     } catch (e) {
       if (isDuplicateKeyError(e)) emailTaken();
@@ -129,6 +141,7 @@ export async function equipeRoutes(app: FastifyInstance): Promise<void> {
     if (id === actor.id && !input.active) {
       throw new ConflictError("Vous ne pouvez pas désactiver votre propre compte.");
     }
+    if (input.active && !target.active) await exigerPlace(context);
 
     try {
       await db.user.update(
@@ -154,6 +167,7 @@ export async function equipeRoutes(app: FastifyInstance): Promise<void> {
       entityId: id,
       metadata: { role: input.role, active: input.active, roleChanged: target.role !== input.role },
     });
+    if (input.active !== target.active) await synchroniserUtilisateurs(ctx.orgId);
     return { id };
   });
 
@@ -173,8 +187,12 @@ export async function equipeRoutes(app: FastifyInstance): Promise<void> {
     if (id === actor.id && !active) {
       throw new ConflictError("Vous ne pouvez pas désactiver votre propre compte.");
     }
-    const target = await db.user.findOne({ id }, { fields: ["role", "firstName", "lastName"] });
+    const target = await db.user.findOne(
+      { id },
+      { fields: ["role", "firstName", "lastName", "active"] },
+    );
     if (!target) throw new NotFoundError("Utilisateur");
+    if (active && !target.active) await exigerPlace(context);
     if (!active && target.role === UserRole.ADMIN && (await otherActiveAdmins(context, id)) === 0) {
       throw new ConflictError(
         "C'est le dernier administrateur actif. Nommez-en un autre avant de le désactiver.",
@@ -188,6 +206,7 @@ export async function equipeRoutes(app: FastifyInstance): Promise<void> {
       entityId: id,
       metadata: { name: `${target.firstName} ${target.lastName}` },
     });
+    if (active !== target.active) await synchroniserUtilisateurs(ctx.orgId);
     return { id, active };
   });
 
