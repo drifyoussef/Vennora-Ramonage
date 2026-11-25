@@ -46,6 +46,8 @@ export interface ReportDocumentData {
     brand: string | null;
     model: string | null;
     serialNumber: string | null;
+    /** Où se trouve l'appareil sur le site (« salon, rez-de-chaussée »). */
+    location: string | null;
   } | null;
   interventionType: string;
   sections: Array<{ label: string; value: string }>;
@@ -236,6 +238,9 @@ export function ReportDocument({ data }: { data: ReportDocumentData }) {
                       .join(" ") || "—"
                   }
                 />
+                {data.equipment.location && (
+                  <Field label="Emplacement" value={data.equipment.location} />
+                )}
                 {data.equipment.serialNumber && (
                   <Field
                     label="N° de série"

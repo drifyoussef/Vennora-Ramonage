@@ -34,7 +34,7 @@ export async function loadReportData({ db }: AppContext, interventionId: string)
           fields: ["name", "address", "addressComplement", "postalCode", "city"],
         }),
         equipment: maybeOne("Equipment", "equipmentId", {
-          fields: ["label", "brand", "model", "serialNumber", "installedAt"],
+          fields: ["label", "brand", "model", "serialNumber", "location", "installedAt"],
           with: { type: one("EquipmentType", "typeId", { fields: ["label"] }) },
         }),
         technician: one("User", "technicianId", { fields: ["firstName", "lastName"] }),
@@ -209,6 +209,7 @@ export async function buildPdfData(
           brand: data.equipment.brand,
           model: data.equipment.model,
           serialNumber: data.equipment.serialNumber,
+          location: data.equipment.location,
         }
       : null,
     interventionType: data.type.label,
